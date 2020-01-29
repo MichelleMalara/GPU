@@ -34,7 +34,7 @@ void addListIndiceListWithListIndice(listIndiceList *listindicelist, listIndiceL
 void removeListIndice(listIndiceList *list, int i);
 
 // ------ fonction triangulation
-listIndiceList separatePointList(listPoint2D listPoint, int nbProcess);
+//listIndiceList separatePointList(listPoint2D listPoint, int nbProcess);
 //listIndice partition(listPoint2D pts, listIndice ptsPath, listIndiceList hulls, int num, int nbProces);
 listIndiceList getAllTrianglePossible(listIndice inds, listPoint2D pts);
 listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts, listIndice *leftPath, listIndice *rightPath);

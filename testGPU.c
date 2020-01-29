@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "CL/opencl.h"
+#include "listPoint.h"
+#include "listIndiceList.h"
+#include "hedge.h"
+#include <math.h>
+
 #define QTE_DONNEES 20
 int main (int argc, const char * argv[])
 {
@@ -19,12 +24,25 @@ int main (int argc, const char * argv[])
     // Variable pour la fonction à paralléliser
     cl_program programme;
     const char *maFonctionAuCarre = {
-    "__kernel void auCarre(__global int *input, __global int *output)\n"
-    "{\n"
-    " int id = get_global_id(0);\n"
-    " output[id] = input[id] * input[id];"
-    "}\n"
+        "__kernel void auCarre(__global int *input, __global int *output)\n"
+        "{\n"
+        " int id = get_global_id(0);\n"
+        " output[id] = input[id] * input[id];"
+        "}\n"
     };
+    const char *getPath = {
+        "__kernel void auCarre(__global listPoint2D input, __global listIndiceList output, __global int nbProcess)\n"
+        "{\n"
+        " int id = get_global_id(0);\n"
+        " if(id<nbProcess){\n"
+        " listPoint2D projec;\n"
+        " if(th_id < nbProcess-1){\n"
+            " projec = projectionWithIndice(copyList,getIndice(pointForPath,th_id));\n"
+            " setListIndice(&path, Convex_HullIndice(projec), th_id);\n"
+        " }\n "
+        "}\n"
+    };
+
     // Variable pour le noyau qui exécutera
     // le programme contenant la fonction parallèle.
     cl_kernel noyau;
@@ -40,6 +58,12 @@ int main (int argc, const char * argv[])
         inputData[i] = i;
         outputData[i] = 0;
     }
+
+    int nbProcess = 4;
+
+    listPoint2D list = constructListPoint2DFromFile("test3");
+    listIndiceList paths = constructeurListIndiceListTaille(nbProcess, list);
+
     // --------------------------------------------------------------------
     // ----------------- Fin de la section des variables ------------------
     // -------------------------------------------------------------------- 
@@ -78,9 +102,15 @@ int main (int argc, const char * argv[])
 
     // Association des variables de données avec le tampon d'échange
     input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(listPoint2D), inputData, &codeErreur);
+    output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(listPoint2D), outputData, &codeErreur);
+    input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);
     output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, outputData, &codeErreur);
+
+
 
     // Construire le noyau
     noyau = clCreateKernel(programme, "auCarre", &codeErreur);

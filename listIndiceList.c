@@ -127,7 +127,7 @@ void removeListIndice(listIndiceList *list, int i){
 
 // ------ fonction triangulation ------ //
 
-listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
+/*listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
   // partition des points parallélisé pour le calcul des la triangulation
 
     listIndiceList newListIndiceList;
@@ -178,7 +178,7 @@ listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
         }
     }
     return newListIndiceList;
-}
+}*/
 
 // listIndice partition(listPoint2D pts, listIndice ptsPath, listIndiceList hulls, int num, int nbProces){
 //   listIndice part;
