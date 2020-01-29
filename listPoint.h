@@ -22,6 +22,10 @@ int getTailleList2D(listPoint2D listPoint);
 Point2D getPoint2D(listPoint2D listPoint, int i);
 float getXListPoint2D(listPoint2D listPoint, int i);
 float getYListPoint2D(listPoint2D listPoint, int i);
+float getXmin(listPoint2D listPoint);
+float getYmin(listPoint2D listPoint);
+float getXmax(listPoint2D listPoint);
+float getYmax(listPoint2D listPoint);
 // ------ setteur
 void setListPoint2DToZero(listPoint2D *listPoint);
 void setListPoint2D(listPoint2D *listPoint, float x2, float y2, int i);
@@ -40,5 +44,10 @@ listPoint2D projection(listPoint2D listPoint, Point2D point);
 listPoint2D projectionWithIndice(listPoint2D listPoint, int indice);
 listPoint2D findPointsPath(listPoint2D pts, int nbproces);
 listPoint2D Convex_Hull(listPoint2D pts);
+
+
+//Fonction math
+float min2(float x, float y);
+float max2(float x, float y);
 
 #endif

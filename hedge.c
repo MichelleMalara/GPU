@@ -5,6 +5,7 @@
 #include "listIndice.h"
 #include "maillage.h"
 #include "hedge.h"
+#include "matriceTriangle.h"
 
 // --------- constructeur --------- //
 
@@ -78,29 +79,37 @@ void addHedgeByPoints(hedge *H, Point2D p1, Point2D p2){
 // ------ fonction triangulation ------ //
 
 hedge calcHedgeDelaunay(listIndiceList list, int nbProcess){
-// calcul de le arrets du maillage en combinant les triangle et les convexHull
-// retourner une liste de liste de 2 points
-  hedge res = constructeurHedge(0);
-  maillage allTriangles = getTriangulation(list,nbProcess);
-  listPoint2D pts = getPointMaillage(allTriangles);
-  // listIndiceList test = constructeurListIndiceList(pts);
-  listIndiceList pathTriangles;
-  listIndice triangle;
-  Point2D a, b, c;
-  for(int j=0 ; j<getTailleMaillage(allTriangles) ; j++){ // chaque path
-    pathTriangles = getListIndiceList(allTriangles,j);
-    for(int i=0 ; i<getTailleListIndice(pathTriangles) ; i++){ // chaque triangle
-      triangle = getListIndice(pathTriangles,i);
-      a = getPoint2D(pts,getIndice(triangle,0));
-      b = getPoint2D(pts,getIndice(triangle,1));
-      c = getPoint2D(pts,getIndice(triangle,2));
-      addHedgeByPoints(&res, a, b);
-      addHedgeByPoints(&res, a, c);
-      addHedgeByPoints(&res, b, c);
+// calcul de le arrets du maillage en combinant les triangles et les convexHull
+// retourner une liste de listes de 2 points
+  hedge newHedge = constructeurHedge(0);
+  matriceTriangle matAdj = calcmatTriDelaunay(list, nbProcess);
+  //displayMatriceTriangle(matAdj);
+  listPoint2D pts = getPoints(list);
+
+  listIndice ligne;
+  for(int i=0 ; i<getTailleMatrice(matAdj) ; i++){ //chaque ligne
+    ligne = getLigne(matAdj,i);
+    for(int j=0 ; j<i+1 ; j++){ // chaque colonne
+      if(getIndice(ligne,j)==1){
+        addHedgeByPoints(&newHedge, getPoint2D(pts,i),  getPoint2D(pts,j));
+      }
     }
   }
-  return res;
+  return newHedge;
 }
+
+// int isSameHedge(hedge edge){
+//     for(int i=0; i<edge.taille; i++){
+//         for(int j=0; j<edge.taille; j++){
+//             if(getXListPoint2D(*edge.hedgeList, i) == getXListPoint2D(*edge.hedgeList, j) &&
+//                     getYListPoint2D(*edge.hedgeList, i) == getYListPoint2D(*edge.hedgeList, j)){
+//                 printf("%d %d", i, j);
+//                 return 1;
+//             }
+//         }
+//     }
+//     return 1;
+// }
 
 /*listPointList separatePointList(listPoint2D listPoint, int nbProcess){
     listPointList newListPointList;
@@ -149,3 +158,56 @@ hedge calcHedgeDelaunay(listIndiceList list, int nbProcess){
 //         }
 //     }
 // }
+
+void addPathEdge(hedge *edge, listIndice list, listPoint2D listPoint){
+    int* indice_tri = (int*)malloc(getTailleIndice(list)*sizeof(int));
+    int tampon;
+    for(int i=0; i<getTailleIndice(list); i++){
+        indice_tri[i] = getIndice(list,i); 
+    }
+    for(int i=0; i<getTailleIndice(list)-1; i++){
+        for(int j=0; j<getTailleIndice(list)-i-1; j++){
+            if(getYListPoint2D(listPoint, indice_tri[j])>getYListPoint2D(listPoint, indice_tri[j+1])){
+                tampon = indice_tri[j];
+                indice_tri[j] = indice_tri[j+1];
+                indice_tri[j+1] = tampon;
+            }
+        }
+    }
+    for(int i=0; i<getTailleIndice(list)-1; i++){
+        addHedge(edge,constructListPoint2DFrom2Points(getPoint2D(listPoint, indice_tri[i]),getPoint2D(listPoint, indice_tri[i+1])));  
+    }
+}
+
+hedge getPath(listPoint2D listPoint, int nbProcess){
+
+    //displayListPoint2D(listPoint);
+
+    listIndiceList newListIndiceList;
+    listPoint2D copyList = constructListPoint2DFromListPoint(listPoint);
+    newListIndiceList.listPoint = copyList;
+    newListIndiceList.taille = nbProcess;
+    newListIndiceList.indiceList = (listIndice*) malloc(nbProcess*sizeof(listIndice));
+    triByX(&copyList);
+    listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
+    /*printf("\n");
+    displayListIndice(pointForPath);
+    printf("\n");*/
+    listIndiceList path = constructeurListIndiceListTaille(nbProcess-1, copyList);
+#pragma omp parallel
+    {
+        int th_id = omp_get_thread_num();
+        listPoint2D projec;
+        if(th_id < nbProcess-1){
+            projec = projectionWithIndice(copyList,getIndice(pointForPath,th_id));
+            setListIndice(&path, Convex_HullIndice(projec), th_id);
+        }
+    }
+    hedge paths = constructeurHedge(0);
+    for(int i=0; i<getTailleListIndice(path); i++){
+        addPathEdge(&paths, getListIndice(path, i), copyList);
+    }
+    //displayHedge(paths);
+    return paths;
+
+}

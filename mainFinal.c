@@ -6,6 +6,7 @@
 #include "listIndice.h"
 #include "listIndiceList.h"
 #include "maillage.h"
+#include "matriceTriangle.h"
 
 
 int main()
@@ -24,17 +25,17 @@ int main()
     hedge H; // list des aretes de maillage de Delaunay
                       // arete = list de 2 point
     // Chargement des points dans le fichier test
-    P = constructListPoint2DFromFile("test");
+    P = constructListPoint2DFromFile("test3");
     printf(" - - - - - - - fichier téléchargé - - - - - - - \n");
     // Partition des points
     Q = separatePointList(P, nthreads);
-    printf(" - - - - - enseble des points partitioné - - - - - \n");
+    printf(" - - - - - ensemble des points partitioné - - - - - \n");
     // T = getTriangulation(Q, nthreads);
     // printf(" - - - - - triangulation calculée - - - - - \n");
-    H = calcHedgeDelaunay(Q, nthreads);
+    //H = calcHedgeDelaunay(Q, nthreads, Q);
     printf(" - - - - - maillage calculée - - - - - \n");
-    printf("%d arretes\n",getTailleHedge(H));
-    displayHedge(H);
+    //printf("%d arretes\n",getTailleHedge(H));
+    //displayHedge(H);
   //   // Definition des variable
   //   listPoint2D P; // Ensemble des points
   //   listIndice pPath; // Indices des nthreads m-1 de séparation

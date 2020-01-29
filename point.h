@@ -26,5 +26,6 @@ void setYPoint2D(Point2D *point, float y2);
 float sqrt_dif(Point2D p1, Point2D p2);
 bool orientation(Point2D p1, Point2D p2, Point2D p3);
 float distance(Point2D p1, Point2D p2);
+bool isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4);
 
 #endif

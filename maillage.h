@@ -23,6 +23,7 @@ listPoint2D getPointMaillage(maillage leMaillage);
 int getTailleMaillage(maillage leMaillage);
 // ------ setteur
 void setMaillage(maillage* Liste, listIndiceList newlist, int i);
+void displayMaillage(maillage leMaillage);
 // ------ fonction classe autre
 /*void displayListIndiceList(listIndiceList liste);
 void addListIndiceList(listIndiceList *listindicelist, listIndice list);

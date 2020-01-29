@@ -3,18 +3,21 @@
 CC=gcc
 
 # Compilation options
-OMP_FLAGS= -fopenmp -lm
+OMP_FLAGS= -fopenmp -lm -lSDL2
 
 # Directory with common headers
 COMMON_DIR=./
 
 # Compile all executable
-all: main mainFinal
+all: main.o mainFinal.o mainInterface.o
 
-main: main.c maillage.c listIndiceList.c listIndice.c listPoint.c point.c
+main.o: main.c maillage.c listIndiceList.c listIndice.c listPoint.c point.c hedge.c matriceTriangle.c
 	$(CC) $^ $(CCFLAGS) $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@
 
-mainFinal: mainFinal.c maillage.c listIndiceList.c listPoint.c listIndice.c point.c  hedge.c
+mainFinal.o: mainFinal.c maillage.c listIndiceList.c listPoint.c listIndice.c point.c hedge.c matriceTriangle.c
+	$(CC) $^ $(CCFLAGS) $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@
+
+mainInterface.o: testSDL.c maillage.c listIndiceList.c listPoint.c listIndice.c point.c hedge.c matriceTriangle.c
 	$(CC) $^ $(CCFLAGS) $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@
 #pi: pi.c
 #	$(CC) $^ $(CCFLAGS)  $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@

@@ -54,6 +54,13 @@ listIndiceList getListIndiceList(maillage leMaillage, int i){
     }
 }
 
+void displayMaillage(maillage leMaillage){
+    for(int i=0; i<getTailleMaillage(leMaillage); i++){
+        displayListIndiceList(leMaillage.listIndiceList[i]);
+    }
+}
+
+
 listPoint2D getPointMaillage(maillage leMaillage){
    return leMaillage.listPoint;
 }
@@ -72,13 +79,26 @@ maillage getTriangulation(listIndiceList paths, int nbProcess){
     newMaillage.taille = nbProcess;
     newMaillage.listIndiceList = (listIndiceList*) malloc(nbProcess*sizeof(listIndiceList));
     newMaillage.listPoint = paths.listPoint;
+    /*if(getTailleListIndice(paths) != getTailleListIndice(separatePath)-1){
+        printf("getTriangulation : probleme de taille de path");
+        exit(1);
+    }*/
 
 #pragma omp parallel
     {
         int th_id = omp_get_thread_num();
         listPoint2D projec;
         if(th_id < nbProcess){
-            setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint),th_id);
+            if(th_id == 0){
+                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,NULL,&(paths.separatePath[0])),th_id);
+            }
+            else if(th_id == nbProcess -1){
+                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,&(paths.separatePath[th_id-1]),NULL),th_id);
+            }
+            else{
+                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,&(paths.separatePath[th_id-1]),&(paths.separatePath[th_id])),th_id);
+            }
+            //setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint),th_id);
         }
     }
     return newMaillage;

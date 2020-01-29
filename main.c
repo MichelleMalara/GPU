@@ -6,6 +6,7 @@
 #include "listIndice.h"
 #include "listIndiceList.h"
 #include "maillage.h"
+#include "matriceTriangle.h"
 
 int main()
 
@@ -13,17 +14,20 @@ int main()
 
     printf("Hello world!\n");
     listPoint2D list = constructListPoint2DFromFile("test3");
-    printf("\n");
+    listIndiceList essai = separatePointList(list, 4);
+    //matriceTriangle solution = calcmatTriDelaunay(essai, 4, essai);
+    //displayMatriceTriangle(solution);
+    /*printf("\n");
     //displayListPoint2D(list);
     printf("\n");
     listPoint2D list2 = Convex_Hull(list);
-    listIndiceList essai = separatePointList(list, 4);
     displayListIndiceList(essai);
     printf("ouah\n\n\n");
     listPoint2D proj2 = projectionWithIndice(list, 6);
     listIndice path2 = Convex_HullIndice(proj2);
     displayListIndice(path2);
-    //displayListPoint2D(proj2);
+    //displayListPoint2D(proj2);*/
+
     /*listPoint2D proj = projectionWithIndice(list, 13);
     listPoint2D proj2 = projectionWithIndice(list, 6);
     listIndice path = Convex_HullIndice(proj);

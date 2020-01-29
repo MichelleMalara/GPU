@@ -14,10 +14,10 @@ listIndice constructeurListIndice(){
     return newList;
 }
 
-listIndice constructeurListIndiceTaille(int taille){
+listIndice constructeurListIndiceTaille(int taille2){
     listIndice newList;
-    newList.taille = taille;
-    newList.indice = (int*)malloc(taille*sizeof(int));
+    newList.taille = taille2;
+    newList.indice = (int*)malloc(taille2*sizeof(int));
     return newList;
 }
 
@@ -54,7 +54,7 @@ int getTailleIndice(listIndice listeIndice){
 // -------- setteur -------- //
 
 void setIndice(listIndice *liste, int newIndice, int place){
-    if(place >= liste->taille){
+    if(place<0 || place >= liste->taille){
         printf("setIndice : la place voulue n'est pas valable");
         exit(1);
     }
@@ -218,17 +218,317 @@ Point2D calcCentre(listIndice ids, listPoint2D pts){
   p1 = getPoint2D(pts, getIndice(ids,0));
   p2 = getPoint2D(pts, getIndice(ids,1));
   p3 = getPoint2D(pts, getIndice(ids,2));
-  // calc coef
-  a1 = 2*(getXPoint2D(p2)-getXPoint2D(p1));
-  b1 = 2*(getYPoint2D(p2)-getYPoint2D(p1));
-  c1 = pow(getXPoint2D(p1),2.)+pow(getYPoint2D(p1),2.)-pow(getXPoint2D(p2),2.)-pow(getYPoint2D(p2),2.);
-  a2 = 2*(getXPoint2D(p2)-getXPoint2D(p1));
-  b2 = 2*(getYPoint2D(p2)-getYPoint2D(p1));
-  c2 = pow(getXPoint2D(p1),2.)+pow(getYPoint2D(p1),2.)-pow(getXPoint2D(p2),2.)-pow(getYPoint2D(p2),2.);
-  // calc coordoné centre
-  x = (b1*c2-b2*c1)/(a1*b2-b1*a2);
-  y = (a2*c1-a1*c2)/(a1*b2-b1*a2);
-  // creation point
-  centre = constructPoint2D(x,y);
-  return centre;
+  
+  if(isColineaire(p1,p3,p1,p2)){
+      centre = constructPoint2D((getXPoint2D(p1)+getXPoint2D(p2)+getXPoint2D(p3))/3,(getYPoint2D(p1),getYPoint2D(p2),getYPoint2D(p3))/3);
+      return centre;
+  }
+  else{
+      // calc coef
+      a1 = 2*(getXPoint2D(p2)-getXPoint2D(p1));
+      b1 = 2*(getYPoint2D(p2)-getYPoint2D(p1));
+      c1 = getXPoint2D(p1)*getXPoint2D(p1) + getYPoint2D(p1)*getYPoint2D(p1) - getXPoint2D(p2)*getXPoint2D(p2) - getYPoint2D(p2)*getYPoint2D(p2);
+
+      a2 = 2*(getXPoint2D(p3)-getXPoint2D(p1));
+      b2 = 2*(getYPoint2D(p3)-getYPoint2D(p1));
+      c2 = getXPoint2D(p1)*getXPoint2D(p1) + getYPoint2D(p1)*getYPoint2D(p1) - getXPoint2D(p3)*getXPoint2D(p3) - getYPoint2D(p3)*getYPoint2D(p3);
+      // calc coordoné centre
+      x = (b1*c2-b2*c1)/(a1*b2-b1*a2);
+      y = (a2*c1-a1*c2)/(a1*b2-b1*a2);
+      // creation point
+      centre = constructPoint2D(x,y);
+      //printf("%f %f \n", (b1*c2-b2*c1),(a1*b2-b1*a2));
+      //printf("%f %f %f\n", distance(p1, centre), distance(p2, centre), distance(p3, centre)); 
+      return centre;
+  }
 }
+
+
+/*Point2D calcCentre(listIndice ids, listPoint2D pts){
+  if(getTailleIndice(ids)!=3){
+    printf("calcCentre : la liste d'indice doit être de taille 3 (triangle)\n");
+    exit(1);
+  }
+  float a1,b1,c1,a2,b2,c2,x,y;
+  float lambda, mu;
+  Point2D p1,p2,p3,centre;
+  float p1x,p1y,p2x,p2y,p3x,p3y;
+  // recupération points
+  p1 = getPoint2D(pts, getIndice(ids,0));
+  p1x = getXPoint2D(p1);
+  p1y = getYPoint2D(p1);
+
+  p2 = getPoint2D(pts, getIndice(ids,1));
+  p2x = getXPoint2D(p2);
+  p2y = getYPoint2D(p2);
+
+  p3 = getPoint2D(pts, getIndice(ids,2));
+  p3x = getXPoint2D(p3);
+  p3y = getYPoint2D(p3);
+
+  // calc coef
+  if(getXPoint2D(p1) == getXPoint2D(p2)){
+      mu = (p3y - p2y)/(2*(p3x - p1x));
+      centre = constructPoint2D((p1x + p3x)/2 + mu * (p3y - p1y),
+              (p1y + p3y)/2 + mu * (p1x - p3x));
+      return centre;
+  }
+  else if(getYPoint2D(p1) == getYPoint2D(p2)){
+      mu = (p3x - p2x)/(2*(p1y - p3y));
+      centre = constructPoint2D((p1x + p3x)/2 + mu * (p3y - p1y),
+              (p1y + p3y)/2 + mu * (p1x - p3x));
+      return centre;
+  }
+  else if(p1x - p3x - (p3y - p1y)/(p2y - p1y) != 0){
+        mu = ((p3y-p2y)/2 - ((p3x - p2x)*(p1x - p2x))/(2*(p2y - p1y)))/(p1x - p3x - (p3y - p1y)/(p2y - p1y));
+        lambda = ((p3x - p2x)/2 + mu*(p3y - p1y));
+        centre = constructPoint2D((p1x + p3x)/2 + mu * (p3y - p1y) - lambda*(p2y - p1y),
+              (p1y + p3y)/2 + mu * (p1x - p3x) - lambda*(p1x - p2x));
+  }
+  else if(p3y - p1y - (p1x - p3x)/(p1x - p2x) != 0){
+        mu = ((p3y-p2y)/2 - ((p3x - p2x)*(p1x - p2x))/(2*(p2y - p1y)))/(p3y - p1y - (p1x - p3x)/(p1x - p2x)); 
+        lambda = ((p3y - p2y)/2 + mu*(p1x - p2x));
+        centre = constructPoint2D((p1x + p3x)/2 + mu * (p3y - p1y) - lambda*(p2y - p1y),
+              (p1y + p3y)/2 + mu * (p1x - p3x) - lambda*(p1x - p2x));
+  }
+  else{
+      printf("Problème get Centre triangle");
+      exit(1);
+  }
+  // calc coordoné centre
+}*/
+int isTriangleOnPath(listIndice triangle, listIndice path){
+    if(getTailleIndice(triangle)!=3){
+        printf("isTriangleOnPath : le triangle n'as pas 3 cote");
+        exit(1);
+    }
+    int compteur = 0;
+    for(int i=0; i<3; i++){
+        for(int j=0; j< getTailleIndice(path); j++){
+            if(getIndice(triangle, i) == getIndice(path, j)){
+                compteur++;
+            }
+        }
+    }
+    return (compteur > 2);
+}
+
+int isAlignedOnPath(listIndice triangle, listIndice path){
+    int compteur = 0;
+    int compteur2 = 0;
+    int* flag = malloc(getTailleIndice(path)*sizeof(int));
+    for(int i=0; i<getTailleIndice(path);i++){
+        flag[i]=0;
+    }
+    for(int i=0; i<3; i++){
+        for(int j=0; j< getTailleIndice(path); j++){
+            if(getIndice(triangle, i) == getIndice(path, j)){
+                flag[j]=1;
+            }
+        }
+    }
+    for(int i=0; i<getTailleIndice(path);i++){
+        if(flag[i]==1){
+            compteur++;
+            compteur2++;
+        }
+        else{
+            compteur=0;
+        }
+        if(compteur==3){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int isTriangleOnPathValidRight(listIndice triangle, listIndice path, listPoint2D listPoint){
+    if(!isAlignedOnPath(triangle, path)){
+        return 0;
+    }
+    int ptmoy=getIndice(triangle,0);
+    int ptmin=ptmoy; int ptmax=ptmoy;
+    int indiceTriangle = 0;
+    for(int i=0; i<3; i++){
+        indiceTriangle = getIndice(triangle, i);
+        if(getYListPoint2D(listPoint,indiceTriangle) < getYListPoint2D(listPoint, ptmin)){
+            ptmin = indiceTriangle;
+        }
+        if(getYListPoint2D(listPoint,indiceTriangle) > getYListPoint2D(listPoint, ptmax)){
+            ptmax = indiceTriangle;
+        }
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 1);
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 2);
+    }
+    if(!orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
+        Point2D centre = calcCentre(triangle, listPoint);
+        float rayon = distance(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
+        Point2D pt;
+            for(int p=0 ; p<getTailleList2D(listPoint) ; p++){
+            // parcour des points
+            pt = getPoint2D(listPoint,p);
+                if(p!=getIndice(triangle,0) || p!=getIndice(triangle,1) || p!=getIndice(triangle,2)){
+                  // point pas dans triangle
+                  dist = distance(centre,pt);
+                  //displayPoint2D(centre);
+                  //printf("%f %f\n", dist, distance(centre, pt));
+                  if(dist < rayon){
+                      return 0;
+                  }
+                }
+            }
+        return 1;
+    }
+    else{
+        return 0;
+    }
+
+}
+
+int isTriangleOnPathValidLeft(listIndice triangle, listIndice path,listPoint2D listPoint){
+    if(!isAlignedOnPath(triangle, path)){
+        return 0;
+    }
+    int ptmoy=getIndice(triangle,0);
+    int ptmin=ptmoy; int ptmax=ptmoy;
+    int indiceTriangle = 0;
+    for(int i=0; i<3; i++){
+        indiceTriangle = getIndice(triangle, i);
+        if(getYListPoint2D(listPoint,indiceTriangle) < getYListPoint2D(listPoint, ptmin)){
+            ptmin = indiceTriangle;
+        }
+        if(getYListPoint2D(listPoint,indiceTriangle) > getYListPoint2D(listPoint, ptmax)){
+            ptmax = indiceTriangle;
+        }
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 1);
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 2);
+    }
+    if(orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
+        Point2D centre = calcCentre(triangle, listPoint);
+        float rayon = distance(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
+        Point2D pt;
+            for(int p=0 ; p<getTailleList2D(listPoint) ; p++){
+            // parcour des points
+            pt = getPoint2D(listPoint,p);
+                if(p!=getIndice(triangle,0) || p!=getIndice(triangle,1) || p!=getIndice(triangle,2)){
+                  // point pas dans triangle
+                  dist = distance(centre,pt);
+                  //displayPoint2D(centre);
+                  //printf("%f %f\n", dist, distance(centre, pt));
+                  if(dist < rayon){
+                      return 0;
+                  }
+                }
+            }
+        return 1;
+    }
+    else{
+        return 0;
+    }
+
+}
+
+/*int isTriangleOnPath(listIndice triangle, listIndice path){
+    if(getTailleIndice(triangle)!=3){
+        printf("isTriangleOnPath : le triangle n'as pas 3 cote");
+        exit(1);
+    }
+    int compteur = 0;
+    int compteur2 = 0;
+    int* flag = malloc(getTailleIndice(path)*sizeof(int));
+    for(int i=0; i<getTailleIndice(path);i++){
+        flag[i]=0;
+    }
+    for(int i=0; i<3; i++){
+        for(int j=0; j< getTailleIndice(path); j++){
+            if(getIndice(triangle, i) == getIndice(path, j)){
+                flag[j]=1;
+            }
+        }
+    }
+    for(int i=0; i<getTailleIndice(path);i++){
+        if(flag[i]==1){
+            compteur++;
+            compteur2++;
+        }
+        else{
+            compteur=0;
+        }
+        if(compteur==3){
+            return 1;
+        }
+    }
+    return (compteur2 > 2);
+}*/
+
+void getTriangleLeftEdge(listIndice* newTriangle, listIndice triangle, listPoint2D listPoint){
+    int ptmoy=getIndice(triangle,0);
+    int ptmin=ptmoy; int ptmax=ptmoy;
+    int indiceTriangle = 0;
+    for(int i=0; i<3; i++){
+        indiceTriangle = getIndice(triangle, i);
+        if(getYListPoint2D(listPoint,indiceTriangle) < getYListPoint2D(listPoint, ptmin)){
+            ptmin = indiceTriangle;
+        }
+        if(getYListPoint2D(listPoint,indiceTriangle) > getYListPoint2D(listPoint, ptmax)){
+            ptmax = indiceTriangle;
+        }
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 1);
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 2);
+    }
+    if(!orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
+        for(int i=0; i<3; i++){
+            setIndice(newTriangle, getIndice(triangle,i),i);
+        }
+    }
+    else{
+        setIndice(newTriangle, -ptmin,0);
+        setIndice(newTriangle, ptmoy,1);
+        setIndice(newTriangle, -ptmax,2);
+    }
+}
+
+void getTriangleRightEdge(listIndice* newTriangle, listIndice triangle, listPoint2D listPoint){
+
+    int ptmoy=getIndice(triangle,0);
+    int ptmin=ptmoy; int ptmax=ptmoy;
+    int indiceTriangle = 0;
+    for(int i=0; i<3; i++){
+        indiceTriangle = getIndice(triangle, i);
+        if(getYListPoint2D(listPoint,indiceTriangle) < getYListPoint2D(listPoint, ptmin)){
+            ptmin = indiceTriangle;
+        }
+        if(getYListPoint2D(listPoint,indiceTriangle) > getYListPoint2D(listPoint, ptmax)){
+            ptmax = indiceTriangle;
+        }
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 1);
+    }
+    if(ptmin == ptmoy || ptmax == ptmoy){
+        ptmoy = getIndice(triangle, 2);
+    }
+    if(orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
+        for(int i=0; i<3; i++){
+            setIndice(newTriangle, getIndice(triangle,i),i);
+        }
+    }
+    else{
+        setIndice(newTriangle, -ptmin,0);
+        setIndice(newTriangle, ptmoy,1);
+        setIndice(newTriangle, -ptmax,2);
+    }
+}
+

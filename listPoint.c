@@ -156,6 +156,7 @@ void freeListPoint2D(listPoint2D* listPoint){
 
 void displayListPoint2D(listPoint2D listPoint){
     for(int i=0; i<listPoint.taille; i++){
+        printf("%d :", i);
         displayPoint2D(listPoint.point[i]);
         printf("\n");
     }
@@ -192,6 +193,41 @@ float getYListPoint2D(listPoint2D listPoint, int i){
     return getYPoint2D(listPoint.point[i]);
 }
 
+float getXmin(listPoint2D listPoint){
+    float xmin=getXListPoint2D(listPoint,0);
+    float xact;
+    for(int i=0; i<getTailleList2D(listPoint); i++){
+        xact = getXListPoint2D(listPoint, i);
+        xmin = min2(xmin, xact); 
+    }
+}
+
+float getXmax(listPoint2D listPoint){
+    float xmax=getXListPoint2D(listPoint,0);
+    float xact;
+    for(int i=0; i<getTailleList2D(listPoint); i++){
+        xact = getXListPoint2D(listPoint, i);
+        xmax = max2(xmax, xact); 
+    }
+}
+
+float getYmin(listPoint2D listPoint){
+    float ymin=getYListPoint2D(listPoint,0);
+    float yact;
+    for(int i=0; i<getTailleList2D(listPoint); i++){
+        yact = getYListPoint2D(listPoint, i);
+        ymin = min2(ymin, yact); 
+    }
+}
+
+float getYmax(listPoint2D listPoint){
+    float ymax=getYListPoint2D(listPoint,0);
+    float yact;
+    for(int i=0; i<getTailleList2D(listPoint); i++){
+        yact = getYListPoint2D(listPoint, i);
+        ymax = max2(ymax, yact); 
+    }
+}
 
 // --------- setteur --------- //
 
@@ -358,4 +394,24 @@ listPoint2D Convex_Hull(listPoint2D pts){
     p = q; // à la fin c'est q le plus "counterclockwise"
   } while (p != l && !flag);  // On continu jusqu'a revenir au 1er*/
   return hull;
+}
+
+
+
+//Fonction math
+float min2(float x, float y){
+    if(x < y){
+        return x;
+    }
+    else{
+        return y;
+    }
+}
+float max2(float x, float y){
+    if(x > y){
+        return x;
+    }
+    else{
+        return y;
+    }
 }

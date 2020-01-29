@@ -12,24 +12,41 @@ listIndiceList constructeurListIndiceList(listPoint2D listPoint2){
     newList.taille = 0;
     newList.indiceList = NULL;
     newList.listPoint = listPoint2;
+    newList.separatePath = NULL;
     return newList;
 }
 
 listIndiceList constructeurListIndiceListTaille(int taille2,listPoint2D list){
-  listIndiceList newList;
-  newList.taille = taille2;
-  if(taille2 == 0){
-      newList.indiceList = NULL;
-  }// ------ fonction triangulation ------ //
-  else{
-    newList.indiceList = (listIndice*) malloc(taille2*sizeof(listIndice));
-  }
-  newList.listPoint = list;
-  return newList;
+    listIndiceList newList;
+    newList.taille = taille2;
+    if(taille2 == 0){
+        newList.indiceList = NULL;
+        newList.separatePath = NULL;
+    }// ------ fonction triangulation ------ //
+    else{
+        newList.indiceList = (listIndice*) malloc(taille2*sizeof(listIndice));
+        newList.separatePath = (listIndice*) malloc((taille2-1)*sizeof(listIndice));
+    }
+    newList.listPoint = list;
+    return newList;
+}
+
+listIndiceList constructeurPossibleMaillage(listPoint2D listPoint){
+    listIndiceList newPossibleMaillage;
+    newPossibleMaillage.taille = listPoint.taille;
+    newPossibleMaillage.indiceList = (listIndice*) malloc(listPoint.taille*sizeof(listIndice));
+    newPossibleMaillage.separatePath = (listIndice*) malloc((listPoint.taille-1)*sizeof(listIndice));
+    newPossibleMaillage.listPoint = listPoint;
 }
 
 
+
 // --------- getteur --------- //
+
+listPoint2D getPoints(listIndiceList listindicelist){
+  return listindicelist.listPoint;
+}
+
 
 listIndice getListIndice(listIndiceList listindicelist, int i){
     if(i<0 || i>listindicelist.taille-1){
@@ -69,6 +86,16 @@ void displayListIndiceList(listIndiceList liste){
     }
     printf("\n");
 }
+void displayListIndiceListPath(listIndiceList liste){
+    if(liste.indiceList == NULL){
+        printf("displayListIndiceList : listeIndice.indice == NULL");
+        exit(1);
+    }
+    for(int i=0; i<liste.taille; i++){
+        displayListIndice(liste.separatePath[i]);
+    }
+    printf("\n");
+}
 
 void addListIndiceList(listIndiceList *listindicelist, listIndice list){
     listindicelist->taille++;
@@ -97,10 +124,12 @@ void removeListIndice(listIndiceList *list, int i){
 }
 
 
+
 // ------ fonction triangulation ------ //
 
 listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
   // partition des points parallélisé pour le calcul des la triangulation
+
     listIndiceList newListIndiceList;
     listPoint2D copyList = constructListPoint2DFromListPoint(listPoint);
     newListIndiceList.listPoint = copyList;
@@ -108,10 +137,11 @@ listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
     newListIndiceList.indiceList = (listIndice*) malloc(nbProcess*sizeof(listIndice));
     triByX(&copyList);
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
-    printf("\n");
-    displayListIndice(pointForPath);
-    printf("\n");
+    // printf("\n");
+    // displayListIndice(pointForPath);
+    // printf("\n");
     listIndiceList path = constructeurListIndiceListTaille(nbProcess-1, copyList);
+
 #pragma omp parallel
     {
         int th_id = omp_get_thread_num();
@@ -121,7 +151,7 @@ listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
             setListIndice(&path, Convex_HullIndice(projec), th_id);
         }
     }
-    displayListIndiceList(path);
+    // displayListIndiceList(path);
 #pragma omp parallel
     {
         int th_id = omp_get_thread_num();
@@ -137,6 +167,14 @@ listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
                 group = getMiddleSideList(copyList, path.indiceList[th_id-1], path.indiceList[th_id]);
             }
             setListIndice(&newListIndiceList, group, th_id);
+        }
+    }
+    newListIndiceList.separatePath = (listIndice*)malloc(getTailleListIndice(path)*sizeof(listIndice));
+    newListIndiceList.tailleSeparatePath = getTailleListIndice(path);
+    for(int i=0; i<getTailleListIndice(path); i++){
+        newListIndiceList.separatePath[i] = constructeurListIndiceTaille(getTailleIndice(getListIndice(path,i)));
+        for(int j=0; j<getTailleIndice(getListIndice(path,i)); j++){
+            newListIndiceList.separatePath[i].indice[j] = getIndice(path.indiceList[i],j);
         }
     }
     return newListIndiceList;
@@ -197,12 +235,13 @@ listIndiceList separatePointList(listPoint2D listPoint, int nbProcess){
 
 listIndiceList getAllTrianglePossible(listIndice inds, listPoint2D pts){
   // crée tout les triplet possible avec les indices de la liste inds
+    listIndice newTriangle;
     listIndiceList newList = constructeurListIndiceList(pts);
-    listIndice newTriangle = constructeurListIndiceTaille(3);
     int n = getTailleIndice(inds);
     for(int i=0; i<n-2; i++){
         for(int j=i+1; j<n-1; j++){
             for(int k=j+1; k<n; k++){
+                newTriangle = constructeurListIndiceTaille(3);
                 setIndice(&newTriangle, getIndice(inds,i), 0);
                 setIndice(&newTriangle, getIndice(inds,j), 1);
                 setIndice(&newTriangle, getIndice(inds,k), 2);
@@ -213,7 +252,7 @@ listIndiceList getAllTrianglePossible(listIndice inds, listPoint2D pts){
     return newList;
 }
 
-listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts){
+listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts, listIndice* leftPath, listIndice *rightPath){
   // triangulation pour un path
     // variables
     bool flag;
@@ -224,6 +263,9 @@ listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts){
     listIndiceList res = constructeurListIndiceList(pts);
     // contruction de tout les triplets = triangles
     listIndiceList listTrig = getAllTrianglePossible(inds,pts);
+    listIndice tampon;
+    int temoinPath=0;
+    int temoinPath2 = 0;
     for(int t=0 ; t<getTailleListIndice(listTrig) ; t++){
       // parcour des triangles
       flag = true;
@@ -237,16 +279,101 @@ listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts){
         if(pt_indice!=getIndice(triangle,0) || pt_indice!=getIndice(triangle,1) || pt_indice!=getIndice(triangle,2)){
           // point pas dans triangle
           dist = distance(centre,pt);
-          if(dist <= rayon){
+          //displayPoint2D(centre);
+          //printf("%f %f\n", dist, distance(centre, pt));
+          if(dist < rayon-0.0001){ // !!!! Probleme d'approximation : changer le "0.001"
             flag = false;
             break;
           }
         }
       }
       if (flag) {
-        addListIndiceList(&res,triangle);
+          if(leftPath==NULL && rightPath==NULL){
+            addListIndiceList(&res,triangle);
+          }
+          else if(leftPath == NULL){
+              temoinPath = isTriangleOnPath(triangle, *rightPath);
+              if(!temoinPath){
+                  addListIndiceList(&res,triangle);
+              }
+              else if(isTriangleOnPathValidRight(triangle, *rightPath, pts)){
+                  addListIndiceList(&res,triangle);
+              }
+          }
+
+          else if(rightPath == NULL){
+              temoinPath = isTriangleOnPath(triangle, *leftPath);
+              if(!temoinPath){
+                  addListIndiceList(&res,triangle);
+              }
+              else if(isTriangleOnPathValidLeft(triangle, *leftPath, pts)){
+                  addListIndiceList(&res,triangle);
+              }
+          }
+          else{
+              temoinPath = isTriangleOnPath(triangle, *rightPath);
+              temoinPath2 = isTriangleOnPath(triangle, *leftPath);
+              if(!temoinPath && !temoinPath2){
+                  addListIndiceList(&res,triangle);
+              }
+              else{
+                  if(temoinPath && isTriangleOnPathValidRight(triangle, *rightPath, pts)){
+                      addListIndiceList(&res,triangle);
+                  }
+                  else if(temoinPath2 && isTriangleOnPathValidLeft(triangle, *leftPath, pts)){
+                      addListIndiceList(&res,triangle);
+                  }
+              }
+          }
+          /*if(leftPath==NULL && rightPath==NULL){
+            addListIndiceList(&res,triangle);
+          }
+          else if(leftPath == NULL){
+              temoinPath = isTriangleOnPath(triangle, *rightPath);
+              if(temoinPath == 2){
+                  tampon = constructeurListIndiceTaille(3);
+                  getTriangleRightEdge(&tampon, triangle, pts);
+                  addListIndiceList(&res, tampon);
+              }
+              if(temoinPath == 0){
+                addListIndiceList(&res,triangle);
+              }
+          }
+          else if(rightPath == NULL){
+              temoinPath = isTriangleOnPath(triangle, *leftPath);
+              if(temoinPath == 2){
+                  tampon = constructeurListIndiceTaille(3);
+                  getTriangleLeftEdge(&tampon, triangle, pts);
+                  addListIndiceList(&res, tampon);
+              }
+              if(temoinPath == 0){
+                addListIndiceList(&res,triangle);
+              }
+          }
+          else{
+              temoinPath = isTriangleOnPath(triangle, *rightPath);
+              if(temoinPath == 2){
+                  tampon = constructeurListIndiceTaille(3);
+                  getTriangleRightEdge(&tampon, triangle, pts);
+                  addListIndiceList(&res, tampon);
+              }
+              if(temoinPath == 0){
+                addListIndiceList(&res,triangle);
+              }
+              temoinPath = isTriangleOnPath(triangle, *leftPath);
+              if(temoinPath == 2){
+                  tampon = constructeurListIndiceTaille(3);
+                  getTriangleLeftEdge(&tampon, triangle, pts);
+                  addListIndiceList(&res, tampon);
+              }
+              if(temoinPath == 0){
+                addListIndiceList(&res,triangle);
+              }
+          }*/
+
       }
     }
-    displayListIndiceList(res);
+    // displayListIndiceList(res);
     return res;
 }
+
