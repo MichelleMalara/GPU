@@ -9,6 +9,7 @@
 #define QTE_DONNEES 20
 int main (int argc, const char * argv[])
 {
+
  // Variables pour la Plateforme de travail
     cl_platform_id plateformeID;
     cl_uint qtePlateformes;
@@ -31,15 +32,14 @@ int main (int argc, const char * argv[])
         "}\n"
     };
     const char *getPath = {
-        "__kernel void auCarre(__global listPoint2D input, __global listIndiceList output, __global int nbProcess)\n"
+        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                 \n"
+        "__kernel void getPath(__global listPoint2D input, __global listIndiceList *output, __global int nbProcess, __global listIndice pointForPath)\n"
         "{\n"
         " int id = get_global_id(0);\n"
-        " if(id<nbProcess){\n"
+        " if(id<nbProcess-1){\n"
         " listPoint2D projec;\n"
-        " if(th_id < nbProcess-1){\n"
-            " projec = projectionWithIndice(copyList,getIndice(pointForPath,th_id));\n"
-            " setListIndice(&path, Convex_HullIndice(projec), th_id);\n"
-        " }\n "
+            " projec = projectionWithIndice(input,getIndice(pointForPath,id));\n"
+            " setListIndice(output, Convex_HullIndice(projec), id);\n"
         "}\n"
     };
 
@@ -62,7 +62,15 @@ int main (int argc, const char * argv[])
     int nbProcess = 4;
 
     listPoint2D list = constructListPoint2DFromFile("test3");
-    listIndiceList paths = constructeurListIndiceListTaille(nbProcess, list);
+    listPoint2D copyList = constructListPoint2DFromListPoint(list);
+    triByX(&copyList);
+    listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
+    listIndiceList paths = constructeurListIndiceListTaille(nbProcess-1, list);
+    cl_mem list_buffer;
+    cl_mem pointForPath_buffer;
+    cl_mem path_buffer;
+
+    char*  include_path = "-I \\include";
 
     // --------------------------------------------------------------------
     // ----------------- Fin de la section des variables ------------------
@@ -84,10 +92,11 @@ int main (int argc, const char * argv[])
     file_execution = clCreateCommandQueue(contexte, TOUS_peripheriqueID, 0, &codeErreur);
 
     // Construire le programme avec la fonction auCarre pour le CPU
-    programme = clCreateProgramWithSource(contexte, 1, (const char**)&maFonctionAuCarre, NULL, &codeErreur);
+    programme = clCreateProgramWithSource(contexte, 1, (const char**)&getPath, NULL, &codeErreur);
+    //programme = clCreateProgramWithSource(contexte, 1, (const char**)&maFonctionAuCarre, NULL, &codeErreur);
 
     // Compilation du programme
-    codeErreur = clBuildProgram(programme, TOUS_qtePeripheriques, &TOUS_peripheriqueID, NULL, NULL, NULL);
+    codeErreur = clBuildProgram(programme, TOUS_qtePeripheriques, &TOUS_peripheriqueID, include_path, NULL, NULL);
     if (codeErreur != CL_SUCCESS) {
         // Si erreur de compilation, alors... Affichage du LOG de compilation
         char logErreurs[4096];
@@ -101,10 +110,12 @@ int main (int argc, const char * argv[])
     }
 
     // Association des variables de données avec le tampon d'échange
-    input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listPoint2D), inputData, &codeErreur);
-    output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listPoint2D), outputData, &codeErreur);
+    list_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(listPoint2D), &copyList, &codeErreur);
+    pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(listIndice), &pointForPath, &codeErreur);
+    path_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(listIndice), &pointForPath, &codeErreur);
     input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);
     output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -114,6 +125,7 @@ int main (int argc, const char * argv[])
 
     // Construire le noyau
     noyau = clCreateKernel(programme, "auCarre", &codeErreur);
+    //noyau = clCreateKernel(programme, "getPath", &codeErreur);
 
     // Associer les tampons d'échanges avec
     // les arguments des fonctions à paralléliser
