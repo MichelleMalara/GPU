@@ -116,7 +116,7 @@ listIndice Convex_HullIndice(listPoint2D pts){
   listIndice hull = constructeurListIndice();
   // Construction hull
   int p = l, q;
-  bool flag = false;
+  int flag = 0;
   do{
     addIndice(&hull, p);
     q = (p + 1) % n;
@@ -238,7 +238,7 @@ Point2D calcCentre(listIndice ids, listPoint2D pts){
       // creation point
       centre = constructPoint2D(x,y);
       //printf("%f %f \n", (b1*c2-b2*c1),(a1*b2-b1*a2));
-      //printf("%f %f %f\n", distance(p1, centre), distance(p2, centre), distance(p3, centre)); 
+      //printf("%f %f %f\n", distanceBis(p1, centre), distanceBis(p2, centre), distanceBis(p3, centre)); 
       return centre;
   }
 }
@@ -366,16 +366,16 @@ int isTriangleOnPathValidRight(listIndice triangle, listIndice path, listPoint2D
     }
     if(!orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
         Point2D centre = calcCentre(triangle, listPoint);
-        float rayon = distance(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
+        float rayon = distanceBis(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
         Point2D pt;
             for(int p=0 ; p<getTailleList2D(listPoint) ; p++){
             // parcour des points
             pt = getPoint2D(listPoint,p);
                 if(p!=getIndice(triangle,0) || p!=getIndice(triangle,1) || p!=getIndice(triangle,2)){
                   // point pas dans triangle
-                  dist = distance(centre,pt);
+                  dist = distanceBis(centre,pt);
                   //displayPoint2D(centre);
-                  //printf("%f %f\n", dist, distance(centre, pt));
+                  //printf("%f %f\n", dist, distanceBis(centre, pt));
                   if(dist < rayon){
                       return 0;
                   }
@@ -413,16 +413,16 @@ int isTriangleOnPathValidLeft(listIndice triangle, listIndice path,listPoint2D l
     }
     if(orientation(getPoint2D(listPoint,ptmin),getPoint2D(listPoint, ptmoy), getPoint2D(listPoint, ptmax))){
         Point2D centre = calcCentre(triangle, listPoint);
-        float rayon = distance(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
+        float rayon = distanceBis(centre, getPoint2D(listPoint,getIndice(triangle,0))), dist=0;
         Point2D pt;
             for(int p=0 ; p<getTailleList2D(listPoint) ; p++){
             // parcour des points
             pt = getPoint2D(listPoint,p);
                 if(p!=getIndice(triangle,0) || p!=getIndice(triangle,1) || p!=getIndice(triangle,2)){
                   // point pas dans triangle
-                  dist = distance(centre,pt);
+                  dist = distanceBis(centre,pt);
                   //displayPoint2D(centre);
-                  //printf("%f %f\n", dist, distance(centre, pt));
+                  //printf("%f %f\n", dist, distanceBis(centre, pt));
                   if(dist < rayon){
                       return 0;
                   }

@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <stdint.h>
 #include "point.h"
 
 // --------- constructeur --------- //
@@ -55,20 +55,20 @@ float sqrt_dif(Point2D p1, Point2D p2){
   return pow(getXPoint2D(p1)-getXPoint2D(p2),2.)+pow(getYPoint2D(p1)-getYPoint2D(p2),2.);
 }
 
-bool orientation(Point2D p1, Point2D p2, Point2D p3){
+int orientation(Point2D p1, Point2D p2, Point2D p3){
   // return True si (p1, p2, p3) est un triangle antihoraire
   float val1 = (getYPoint2D(p2) - getYPoint2D(p1)) * (getXPoint2D(p3) - getXPoint2D(p2));
   float val2 = (getXPoint2D(p2) - getXPoint2D(p1)) * (getYPoint2D(p3) - getYPoint2D(p2));
   return val1<val2;
 }
 
-float distance(Point2D p1, Point2D p2){
+float distanceBis(Point2D p1, Point2D p2){
   // retourne la distance euclidienne entre p1 et p2
   float dcarre = (getXPoint2D(p1)-getXPoint2D(p2))*(getXPoint2D(p1)-getXPoint2D(p2))
    + (getYPoint2D(p1)-getYPoint2D(p2))*(getYPoint2D(p1)-getYPoint2D(p2));
   return dcarre;
 }
 
-bool isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4){
+int isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4){
     return (getXPoint2D(p2)-getXPoint2D(p1))*(getYPoint2D(p4)-getYPoint2D(p3)) - (getYPoint2D(p2)-getYPoint2D(p1))*(getXPoint2D(p4)-getXPoint2D(p3)) == 0;
 }

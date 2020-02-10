@@ -1,8 +1,6 @@
 #ifndef POINT
 #define POINT
 
-#include <stdbool.h>
-
 typedef struct Point2D Point2D;
 
 struct Point2D{
@@ -24,8 +22,8 @@ void setYPoint2D(Point2D *point, float y2);
 
 // ------ fonction triangulation
 float sqrt_dif(Point2D p1, Point2D p2);
-bool orientation(Point2D p1, Point2D p2, Point2D p3);
-float distance(Point2D p1, Point2D p2);
-bool isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4);
+int orientation(Point2D p1, Point2D p2, Point2D p3);
+float distanceBis(Point2D p1, Point2D p2);
+int isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4);
 
 #endif

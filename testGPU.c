@@ -32,14 +32,18 @@ int main (int argc, const char * argv[])
         "}\n"
     };
     const char *getPath = {
-        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                 \n"
-        "__kernel void getPath(__global listPoint2D input, __global listIndiceList *output, __global int nbProcess, __global listIndice pointForPath)\n"
+        "#include <../../user/7/lavainnr/Documents/cours/GPU/point.h>\n"
+        "#include <../../user/7/lavainnr/Documents/cours/GPU/listPoint.h>\n"
+        "#include <../../user/7/lavainnr/Documents/cours/GPU/listIndice.h>\n"
+        "#include <../../user/7/lavainnr/Documents/cours/GPU/listIndiceList.h>\n"
+        "__kernel void getPath(__global listPoint2D *input, __global listIndiceList *output, __global int *nbProcess, __global listIndice *pointForPath)\n"
         "{\n"
         " int id = get_global_id(0);\n"
-        " if(id<nbProcess-1){\n"
+        " if(id<*nbProcess-1){\n"
         " listPoint2D projec;\n"
-            " projec = projectionWithIndice(input,getIndice(pointForPath,id));\n"
-            " setListIndice(output, Convex_HullIndice(projec), id);\n"
+            " projec = projectionWithIndice(*input,getIndice(*pointForPath,id));\n"
+            //" setListIndice(output, Convex_HullIndice(projec), id);\n"
+          "}\n"
         "}\n"
     };
 
@@ -70,7 +74,7 @@ int main (int argc, const char * argv[])
     cl_mem pointForPath_buffer;
     cl_mem path_buffer;
 
-    char*  include_path = "-I \\include";
+    char*  include_path = "-I .";
 
     // --------------------------------------------------------------------
     // ----------------- Fin de la section des variables ------------------

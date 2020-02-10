@@ -255,7 +255,7 @@ listIndiceList getAllTrianglePossible(listIndice inds, listPoint2D pts){
 listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts, listIndice* leftPath, listIndice *rightPath){
   // triangulation pour un path
     // variables
-    bool flag;
+    int flag;
     listIndice triangle;
     Point2D centre, pt;
     float rayon, dist;
@@ -268,21 +268,21 @@ listIndiceList getOneTriangulation(listIndice inds, listPoint2D pts, listIndice*
     int temoinPath2 = 0;
     for(int t=0 ; t<getTailleListIndice(listTrig) ; t++){
       // parcour des triangles
-      flag = true;
+      flag = 1;
       triangle = getListIndice(listTrig,t);
       centre = calcCentre(triangle,pts);
-      rayon = distance(centre, getPoint2D(pts,getIndice(triangle,0)));
+      rayon = distanceBis(centre, getPoint2D(pts,getIndice(triangle,0)));
       for(int p=0 ; p<getTailleIndice(inds) ; p++){
         // parcour des points
         pt_indice = getIndice(inds,p);
         pt = getPoint2D(pts,pt_indice);
         if(pt_indice!=getIndice(triangle,0) || pt_indice!=getIndice(triangle,1) || pt_indice!=getIndice(triangle,2)){
           // point pas dans triangle
-          dist = distance(centre,pt);
+          dist = distanceBis(centre,pt);
           //displayPoint2D(centre);
-          //printf("%f %f\n", dist, distance(centre, pt));
+          //printf("%f %f\n", dist, distanceBis(centre, pt));
           if(dist < rayon-0.0001){ // !!!! Probleme d'approximation : changer le "0.001"
-            flag = false;
+            flag = 0;
             break;
           }
         }
