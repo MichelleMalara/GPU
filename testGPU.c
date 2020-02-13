@@ -33,8 +33,8 @@ int main (int argc, const char * argv[])
     };
     const char *getPath = {
         "#include <../../user/7/lavainnr/Documents/cours/GPU/point.h>\n"
-        "#include <../../user/7/lavainnr/Documents/cours/GPU/listPoint.h>\n"
         "#include <../../user/7/lavainnr/Documents/cours/GPU/listIndice.h>\n"
+        "#include <../../user/7/lavainnr/Documents/cours/GPU/listPoint.h>\n"
         "#include <../../user/7/lavainnr/Documents/cours/GPU/listIndiceList.h>\n"
         "__kernel void getPath(__global listPoint2D *input, __global listIndiceList *output, __global int *nbProcess, __global listIndice *pointForPath)\n"
         "{\n"
@@ -73,6 +73,7 @@ int main (int argc, const char * argv[])
     cl_mem list_buffer;
     cl_mem pointForPath_buffer;
     cl_mem path_buffer;
+    cl_mem nbProcess_buffer;
 
     char*  include_path = "-I .";
 
@@ -113,13 +114,16 @@ int main (int argc, const char * argv[])
         return 1;
     }
 
+    printf("Test");
     // Association des variables de données avec le tampon d'échange
     list_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(listPoint2D), &copyList, &codeErreur);
     pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(listIndice), &pointForPath, &codeErreur);
     path_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listIndice), &pointForPath, &codeErreur);
+            sizeof(listIndiceList), &paths, &codeErreur);
+    nbProcess_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &nbProcess, &codeErreur);
     input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);
     output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -128,13 +132,17 @@ int main (int argc, const char * argv[])
 
 
     // Construire le noyau
-    noyau = clCreateKernel(programme, "auCarre", &codeErreur);
-    //noyau = clCreateKernel(programme, "getPath", &codeErreur);
+    //noyau = clCreateKernel(programme, "auCarre", &codeErreur);
+    noyau = clCreateKernel(programme, "getPath", &codeErreur);
 
     // Associer les tampons d'échanges avec
     // les arguments des fonctions à paralléliser
-    codeErreur = clSetKernelArg(noyau, 0, sizeof(input_buffer), &input_buffer);
-    codeErreur = clSetKernelArg(noyau, 1, sizeof(output_buffer), &output_buffer);
+    //codeErreur = clSetKernelArg(noyau, 0, sizeof(input_buffer), &input_buffer);
+    //codeErreur = clSetKernelArg(noyau, 1, sizeof(output_buffer), &output_buffer);
+    codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
+    codeErreur = clSetKernelArg(noyau, 1, sizeof(path_buffer), &path_buffer);
+    codeErreur = clSetKernelArg(noyau, 2, sizeof(nbProcess_buffer), &nbProcess_buffer);
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);
 
     // Mettre le noyau dans la file d'execution
     size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
@@ -142,10 +150,14 @@ int main (int argc, const char * argv[])
             dimensions_globales, NULL, 0, NULL, NULL);
 
     // Récupération des résultats dans le tampon
-    clEnqueueReadBuffer(file_execution, output_buffer, CL_TRUE,
-            0, sizeof(int) * QTE_DONNEES, outputData, 0, NULL, NULL);
+    clEnqueueReadBuffer(file_execution, path_buffer, CL_TRUE,
+            0, sizeof(int) * QTE_DONNEES, &paths, 0, NULL, NULL);
+    //clEnqueueReadBuffer(file_execution, output_buffer, CL_TRUE,
+    //        0, sizeof(int) * QTE_DONNEES, outputData, 0, NULL, NULL);
 
     // Affichage des résultats
+    displayListIndiceList(paths);
+    printf("\nOuahhh\n");
     printf("\n\n\n >>>>> Affichage des resultats <<<<<");
     printf("\n\nContenu de la variable --inputData--\n");
     for (int i = 0; i < QTE_DONNEES; i++) {
