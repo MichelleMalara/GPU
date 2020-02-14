@@ -75,12 +75,12 @@ int main (int argc, const char * argv[])
         "#include \"listIndiceList.h\"\n"
         "__kernel void getPath(__global listPoint2D *input, __global listIndiceList *output, __global int *nbProcess, __global listIndice *pointForPath)\n"
         "{\n"
-        /*" int id = get_global_id(0);\n"
+        " int id = get_global_id(0);\n"
         " if(id<*nbProcess-1){\n"
         " listPoint2D projec;\n"
             " projec = projectionWithIndice(*input,getIndice(*pointForPath,id));\n"
             //" setListIndice(output, Convex_HullIndice(projec), id);\n"
-          "}\n"*/
+          "}\n"
         "}\n"
     };
 
@@ -149,9 +149,9 @@ int main (int argc, const char * argv[])
     };
 
     // Construire le programme avec la fonction auCarre pour le CPU
-    //programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
+    programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
     //programme = clCreateProgramWithSource(contexte, 1, (const char**)&getPath, NULL, &codeErreur);
-    programme = clCreateProgramWithSource(contexte, 1, (const char**)&maFonctionAuCarre, NULL, &codeErreur);
+    //programme = clCreateProgramWithSource(contexte, 1, (const char**)&maFonctionAuCarre, NULL, &codeErreur);
 
     // Compilation du programme
     codeErreur = clBuildProgram(programme, TOUS_qtePeripheriques, &TOUS_peripheriqueID, include_path, NULL, NULL);
@@ -189,12 +189,12 @@ int main (int argc, const char * argv[])
 
     // Associer les tampons d'échanges avec
     // les arguments des fonctions à paralléliser
-    codeErreur = clSetKernelArg(noyau, 0, sizeof(input_buffer), &input_buffer);
-    codeErreur = clSetKernelArg(noyau, 1, sizeof(output_buffer), &output_buffer);
-    /*codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
+    //codeErreur = clSetKernelArg(noyau, 0, sizeof(input_buffer), &input_buffer);
+    //codeErreur = clSetKernelArg(noyau, 1, sizeof(output_buffer), &output_buffer);
+    codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
     codeErreur = clSetKernelArg(noyau, 1, sizeof(path_buffer), &path_buffer);
     codeErreur = clSetKernelArg(noyau, 2, sizeof(nbProcess_buffer), &nbProcess_buffer);
-    codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);*/
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);
 
     // Mettre le noyau dans la file d'execution
     size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
