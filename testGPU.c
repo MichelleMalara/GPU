@@ -42,6 +42,9 @@ char* read_file(char* fileName){
         printf("Impossible d'ouvrir le fichier");
         exit(1);
     }
+    compteur++;
+    result = realloc(result, sizeof(char)*compteur);
+    result[compteur-1]='\0';
     return result;
 }
 int main (int argc, const char * argv[])
@@ -61,13 +64,14 @@ int main (int argc, const char * argv[])
     cl_command_queue file_execution;
     // Variable pour la fonction à paralléliser
     cl_program programme;
-    const char *maFonctionAuCarre = {
+    /*const char *maFonctionAuCarre = {
         "__kernel void auCarre(__global int *input, __global int *output)\n"
         "{\n"
         " int id = get_global_id(0);\n"
+        " int yo = 5;\n"
         " output[id] = input[id] * input[id];"
         "}\n"
-    };
+    };*/
     const char *getPath = {
         "#include \"point.h\"\n"
         "#include \"listIndice.h\"\n"
@@ -89,15 +93,16 @@ int main (int argc, const char * argv[])
     cl_kernel noyau;
     // Variables qui contiendront les données.
     int* inputData;
-    int* outputData;
-    cl_mem input_buffer;
+    float* outputData;
+    cl_mem listPoint_buffer;
+    cl_mem pointForPath_buffer;
     cl_mem output_buffer;
     // Initialisation des variables de données
     inputData = (int*)malloc(QTE_DONNEES * sizeof(int));
-    outputData = (int*)malloc(QTE_DONNEES * sizeof(int));
+    outputData = (float*)malloc(QTE_DONNEES * sizeof(float));
     for (int i = 0; i < QTE_DONNEES; i++) {
         inputData[i] = i;
-        outputData[i] = 0;
+        outputData[i] = 0.;
     }
 
     int nbProcess = 4;
@@ -107,10 +112,6 @@ int main (int argc, const char * argv[])
     triByX(&copyList);
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
     listIndiceList paths = constructeurListIndiceListTaille(nbProcess-1, list);
-    cl_mem list_buffer;
-    cl_mem pointForPath_buffer;
-    cl_mem path_buffer;
-    cl_mem nbProcess_buffer;
 
     char*  include_path = "-I .";
 
@@ -140,18 +141,22 @@ int main (int argc, const char * argv[])
         read_file("listIndiceList.c"),
         getPath
     };*/
-    const char *sources[5] = {
+    /*const char *sources[5] = {
         read_file("point.c"),
         read_file("listPoint.c"),
         read_file("listIndice.c"),
         read_file("listIndiceList.c"),
         getPath
-    };
+    };*/
 
+    const char *sourcesCarre[4] = {read_file("fonctionKernel2.cl"), read_file("fonctionKernel.c"), read_file("point2.c"), read_file("listPoint2.c")};
+    //const char *sourcesCarre2[2] = {read_file("fonctionKernel.cl"), read_file("fonctionKernel.c")};
+
+    //printf(read_file("fonctionKernel.c"));
     // Construire le programme avec la fonction auCarre pour le CPU
-    programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
+    //programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
     //programme = clCreateProgramWithSource(contexte, 1, (const char**)&getPath, NULL, &codeErreur);
-    //programme = clCreateProgramWithSource(contexte, 1, (const char**)&maFonctionAuCarre, NULL, &codeErreur);
+    programme = clCreateProgramWithSource(contexte, 4, (const char**)sourcesCarre, NULL, &codeErreur);
 
     // Compilation du programme
     codeErreur = clBuildProgram(programme, TOUS_qtePeripheriques, &TOUS_peripheriqueID, include_path, NULL, NULL);
@@ -168,19 +173,14 @@ int main (int argc, const char * argv[])
     }
 
     // Association des variables de données avec le tampon d'échange
-    list_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+    /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
+    listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(listPoint2D), &copyList, &codeErreur);
-    pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+    pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(listIndice), &pointForPath, &codeErreur);
-    path_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listIndiceList), &paths, &codeErreur);
-    nbProcess_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int), &nbProcess, &codeErreur);
-    input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int) * QTE_DONNEES, inputData, &codeErreur);
     output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int) * QTE_DONNEES, outputData, &codeErreur);
-
+            sizeof(float) * QTE_DONNEES, outputData, &codeErreur);
 
 
     // Construire le noyau
@@ -189,12 +189,13 @@ int main (int argc, const char * argv[])
 
     // Associer les tampons d'échanges avec
     // les arguments des fonctions à paralléliser
-    //codeErreur = clSetKernelArg(noyau, 0, sizeof(input_buffer), &input_buffer);
-    //codeErreur = clSetKernelArg(noyau, 1, sizeof(output_buffer), &output_buffer);
-    codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
+    codeErreur = clSetKernelArg(noyau, 0, sizeof(listPoint_buffer), &listPoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 1, sizeof(pointForPath_buffer), &pointForPath_buffer);
+    codeErreur = clSetKernelArg(noyau, 2, sizeof(output_buffer), &output_buffer);
+    /*codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
     codeErreur = clSetKernelArg(noyau, 1, sizeof(path_buffer), &path_buffer);
     codeErreur = clSetKernelArg(noyau, 2, sizeof(nbProcess_buffer), &nbProcess_buffer);
-    codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);*/
 
     // Mettre le noyau dans la file d'execution
     size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
@@ -205,7 +206,7 @@ int main (int argc, const char * argv[])
     //clEnqueueReadBuffer(file_execution, path_buffer, CL_TRUE,
     //        0, sizeof(int) * QTE_DONNEES, &paths, 0, NULL, NULL);
     clEnqueueReadBuffer(file_execution, output_buffer, CL_TRUE,
-            0, sizeof(int) * QTE_DONNEES, outputData, 0, NULL, NULL);
+            0, sizeof(float) * QTE_DONNEES, outputData, 0, NULL, NULL);
 
     // Affichage des résultats
     printf("\nOuahhh\n");
@@ -217,12 +218,14 @@ int main (int argc, const char * argv[])
     printf("\n\nContenu de la variable --outputData--\n");
     printf("Fonction --auCarre--\n");
     for (int i = 0; i < QTE_DONNEES; i++) {
-        printf("%d; ", outputData[i]);
+        printf("%f; ", outputData[i]);
     }
+    printf("\n");
     // Libération des ressources
     free(inputData);
     free(outputData);
-    clReleaseMemObject(input_buffer);
+    clReleaseMemObject(listPoint_buffer);
+    clReleaseMemObject(pointForPath_buffer);
     clReleaseMemObject(output_buffer);
     clReleaseProgram(programme);
     clReleaseKernel(noyau);

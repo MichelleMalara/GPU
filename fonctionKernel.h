@@ -1,0 +1,1 @@
+int doubleMoi(int x);
