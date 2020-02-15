@@ -112,6 +112,10 @@ int main (int argc, const char * argv[])
     triByX(&copyList);
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
     listIndiceList paths = constructeurListIndiceListTaille(nbProcess-1, list);
+    listPoint2D *projection = (listPoint2D*)malloc(sizeof(listPoint2D)*(nbProcess-1));
+    for(int i=0; i<nbProcess-1; i++){
+        projection[i].point = malloc(sizeof(Point2D)*getTailleList2D(copyList));
+    }
 
     char*  include_path = "-I .";
 
@@ -134,25 +138,9 @@ int main (int argc, const char * argv[])
     // Création de la file d'exécution pour le CPU
     file_execution = clCreateCommandQueue(contexte, TOUS_peripheriqueID, 0, &codeErreur);
 
-    /*static const char *sources[5] = {
-        read_file("point.c"),
-        read_file("listPoint.c"),
-        read_file("listIndice.c"),
-        read_file("listIndiceList.c"),
-        getPath
-    };*/
-    /*const char *sources[5] = {
-        read_file("point.c"),
-        read_file("listPoint.c"),
-        read_file("listIndice.c"),
-        read_file("listIndiceList.c"),
-        getPath
-    };*/
-
+    //Creation du fichier source pour le kernel
     const char *sourcesCarre[4] = {read_file("fonctionKernel2.cl"), read_file("fonctionKernel.c"), read_file("point2.c"), read_file("listPoint2.c")};
-    //const char *sourcesCarre2[2] = {read_file("fonctionKernel.cl"), read_file("fonctionKernel.c")};
 
-    //printf(read_file("fonctionKernel.c"));
     // Construire le programme avec la fonction auCarre pour le CPU
     //programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
     //programme = clCreateProgramWithSource(contexte, 1, (const char**)&getPath, NULL, &codeErreur);
@@ -180,7 +168,7 @@ int main (int argc, const char * argv[])
     pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(listIndice), &pointForPath, &codeErreur);
     output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(float) * QTE_DONNEES, outputData, &codeErreur);
+            sizeof(listPoint2D) * (nbProcess-1), outputData, &codeErreur);
 
 
     // Construire le noyau
@@ -198,7 +186,8 @@ int main (int argc, const char * argv[])
     codeErreur = clSetKernelArg(noyau, 3, sizeof(pointForPath_buffer), &pointForPath_buffer);*/
 
     // Mettre le noyau dans la file d'execution
-    size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
+    //size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
+    size_t dimensions_globales[] = { nbProcess-1, 0, 0 };
     codeErreur = clEnqueueNDRangeKernel(file_execution, noyau, 1, NULL, 
             dimensions_globales, NULL, 0, NULL, NULL);
 
@@ -206,7 +195,10 @@ int main (int argc, const char * argv[])
     //clEnqueueReadBuffer(file_execution, path_buffer, CL_TRUE,
     //        0, sizeof(int) * QTE_DONNEES, &paths, 0, NULL, NULL);
     clEnqueueReadBuffer(file_execution, output_buffer, CL_TRUE,
-            0, sizeof(float) * QTE_DONNEES, outputData, 0, NULL, NULL);
+            0, sizeof(listPoint2D) * (nbProcess-1), projection, 0, NULL, NULL);
+    for(int i=0; i<nbProcess-1; i++){
+        displayListPoint2D(projection[i]);
+    }
 
     // Affichage des résultats
     printf("\nOuahhh\n");
