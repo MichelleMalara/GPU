@@ -64,29 +64,6 @@ int main (int argc, const char * argv[])
     cl_command_queue file_execution;
     // Variable pour la fonction à paralléliser
     cl_program programme;
-    /*const char *maFonctionAuCarre = {
-        "__kernel void auCarre(__global int *input, __global int *output)\n"
-        "{\n"
-        " int id = get_global_id(0);\n"
-        " int yo = 5;\n"
-        " output[id] = input[id] * input[id];"
-        "}\n"
-    };*/
-    const char *getPath = {
-        "#include \"point.h\"\n"
-        "#include \"listIndice.h\"\n"
-        "#include \"listPoint.h\"\n"
-        "#include \"listIndiceList.h\"\n"
-        "__kernel void getPath(__global listPoint2D *input, __global listIndiceList *output, __global int *nbProcess, __global listIndice *pointForPath)\n"
-        "{\n"
-        " int id = get_global_id(0);\n"
-        " if(id<*nbProcess-1){\n"
-        " listPoint2D projec;\n"
-            " projec = projectionWithIndice(*input,getIndice(*pointForPath,id));\n"
-            //" setListIndice(output, Convex_HullIndice(projec), id);\n"
-          "}\n"
-        "}\n"
-    };
 
     // Variable pour le noyau qui exécutera
     // le programme contenant la fonction parallèle.
@@ -96,7 +73,10 @@ int main (int argc, const char * argv[])
     float* outputData;
     cl_mem listPoint_buffer;
     cl_mem pointForPath_buffer;
-    cl_mem output_buffer;
+    cl_mem taillePoint_buffer;
+    cl_mem nbPrc_buffer;
+    cl_mem paths_buffer;
+    cl_mem taillePath_buffer;
     // Initialisation des variables de données
     inputData = (int*)malloc(QTE_DONNEES * sizeof(int));
     outputData = (float*)malloc(QTE_DONNEES * sizeof(float));
@@ -109,14 +89,18 @@ int main (int argc, const char * argv[])
 
     listPoint2D list = constructListPoint2DFromFile("test3");
     listPoint2D copyList = constructListPoint2DFromListPoint(list);
+    int tailleCopyList = getTailleList2D(copyList); 
     triByX(&copyList);
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
-    listIndiceList paths = constructeurListIndiceListTaille(nbProcess-1, list);
-    listPoint2D *projection = (listPoint2D*)malloc(sizeof(listPoint2D)*(nbProcess-1));
-    for(int i=0; i<nbProcess-1; i++){
-        projection[i].point = malloc(sizeof(Point2D)*getTailleList2D(copyList));
+    displayListIndice(pointForPath);
+    int *paths = malloc(sizeof(int)*tailleCopyList*(nbProcess-1));
+    for(int i=0; i<tailleCopyList*(nbProcess-1); i++){
+        paths[i]=-1;
     }
-
+    int *taillePath = malloc(sizeof(int)*(nbProcess-1));
+    for(int i=0; i<nbProcess-1; i++){
+        taillePath[i]=0;
+    }
     char*  include_path = "-I .";
 
     // --------------------------------------------------------------------
@@ -142,8 +126,6 @@ int main (int argc, const char * argv[])
     const char *sourcesCarre[4] = {read_file("fonctionKernel2.cl"), read_file("fonctionKernel.c"), read_file("point2.c"), read_file("listPoint2.c")};
 
     // Construire le programme avec la fonction auCarre pour le CPU
-    //programme = clCreateProgramWithSource(contexte, 5, (const char**)&sources, NULL, &codeErreur);
-    //programme = clCreateProgramWithSource(contexte, 1, (const char**)&getPath, NULL, &codeErreur);
     programme = clCreateProgramWithSource(contexte, 4, (const char**)sourcesCarre, NULL, &codeErreur);
 
     // Compilation du programme
@@ -164,22 +146,30 @@ int main (int argc, const char * argv[])
     /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
     listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listPoint2D), &copyList, &codeErreur);
+            sizeof(Point2D)*tailleCopyList, copyList.point, &codeErreur);
     pointForPath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listIndice), &pointForPath, &codeErreur);
-    output_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(listPoint2D) * (nbProcess-1), outputData, &codeErreur);
+            sizeof(int)*(nbProcess-1), pointForPath.indice, &codeErreur);
+    taillePoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &copyList.taille, &codeErreur);
+    nbPrc_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &nbProcess, &codeErreur);
+    paths_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * tailleCopyList* (nbProcess-1), paths, &codeErreur);
+    taillePath_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess-1), taillePath, &codeErreur);
 
 
     // Construire le noyau
-    noyau = clCreateKernel(programme, "auCarre", &codeErreur);
-    //noyau = clCreateKernel(programme, "getPath", &codeErreur);
+    noyau = clCreateKernel(programme, "getPath", &codeErreur);
 
     // Associer les tampons d'échanges avec
     // les arguments des fonctions à paralléliser
     codeErreur = clSetKernelArg(noyau, 0, sizeof(listPoint_buffer), &listPoint_buffer);
     codeErreur = clSetKernelArg(noyau, 1, sizeof(pointForPath_buffer), &pointForPath_buffer);
-    codeErreur = clSetKernelArg(noyau, 2, sizeof(output_buffer), &output_buffer);
+    codeErreur = clSetKernelArg(noyau, 2, sizeof(taillePoint_buffer), &taillePoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(nbPrc_buffer), &nbPrc_buffer);
+    codeErreur = clSetKernelArg(noyau, 4, sizeof(paths_buffer), &paths_buffer);
+    codeErreur = clSetKernelArg(noyau, 5, sizeof(taillePath_buffer), &taillePath_buffer);
     /*codeErreur = clSetKernelArg(noyau, 0, sizeof(list_buffer), &list_buffer);
     codeErreur = clSetKernelArg(noyau, 1, sizeof(path_buffer), &path_buffer);
     codeErreur = clSetKernelArg(noyau, 2, sizeof(nbProcess_buffer), &nbProcess_buffer);
@@ -194,11 +184,89 @@ int main (int argc, const char * argv[])
     // Récupération des résultats dans le tampon
     //clEnqueueReadBuffer(file_execution, path_buffer, CL_TRUE,
     //        0, sizeof(int) * QTE_DONNEES, &paths, 0, NULL, NULL);
-    clEnqueueReadBuffer(file_execution, output_buffer, CL_TRUE,
-            0, sizeof(listPoint2D) * (nbProcess-1), projection, 0, NULL, NULL);
-    for(int i=0; i<nbProcess-1; i++){
-        displayListPoint2D(projection[i]);
+    clEnqueueReadBuffer(file_execution, paths_buffer, CL_TRUE,
+            0, sizeof(int) *tailleCopyList* (nbProcess-1), paths, 0, NULL, NULL);
+    clEnqueueReadBuffer(file_execution, taillePath_buffer, CL_TRUE,
+            0, sizeof(int) * (nbProcess-1), taillePath, 0, NULL, NULL);
+
+    for(int i=0; i<tailleCopyList*(nbProcess-1); i++){
+        printf(" %d ", paths[i]);
     }
+
+
+
+
+
+
+
+
+    printf("\n\n\n");
+
+    cl_mem groupPaths_buffer;
+    cl_mem groupPathTaille_buffer;
+    int *groupPaths = malloc(sizeof(int)*tailleCopyList*(nbProcess));
+    for(int i=0; i<tailleCopyList*(nbProcess); i++){
+        groupPaths[i]=-1;
+    }
+    int *groupPathTaille = malloc(sizeof(int)*(nbProcess));
+    for(int i=0; i<nbProcess; i++){
+        groupPathTaille[i]=0;
+    }
+
+    // Association des variables de données avec le tampon d'échange
+    /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
+    listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(Point2D)*tailleCopyList, copyList.point, &codeErreur);
+    paths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * tailleCopyList* (nbProcess-1), paths, &codeErreur);
+    taillePath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess-1), taillePath, &codeErreur);
+    taillePoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &copyList.taille, &codeErreur);
+    nbPrc_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &nbProcess, &codeErreur);
+    groupPaths_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * tailleCopyList* (nbProcess), groupPaths, &codeErreur);
+    groupPathTaille_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess), groupPathTaille, &codeErreur);
+
+
+    // Construire le noyau
+    noyau = clCreateKernel(programme, "getGroup", &codeErreur);
+
+    // Associer les tampons d'échanges avec
+    // les arguments des fonctions à paralléliser
+    codeErreur = clSetKernelArg(noyau, 0, sizeof(listPoint_buffer), &listPoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 1, sizeof(paths_buffer), &paths_buffer);
+    codeErreur = clSetKernelArg(noyau, 2, sizeof(taillePath_buffer), &taillePath_buffer);
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(taillePoint_buffer), &taillePoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 4, sizeof(nbPrc_buffer), &nbPrc_buffer);
+    codeErreur = clSetKernelArg(noyau, 5, sizeof(groupPaths_buffer), &groupPaths_buffer);
+    codeErreur = clSetKernelArg(noyau, 6, sizeof(groupPathTaille_buffer), &groupPathTaille_buffer);
+
+    // Mettre le noyau dans la file d'execution
+    //size_t dimensions_globales[] = { QTE_DONNEES, 0, 0 };
+    size_t dimensions_globales2[] = { nbProcess, 0, 0 };
+    codeErreur = clEnqueueNDRangeKernel(file_execution, noyau, 1, NULL, 
+            dimensions_globales2, NULL, 0, NULL, NULL);
+
+    // Récupération des résultats dans le tampon
+    clEnqueueReadBuffer(file_execution, groupPaths_buffer, CL_TRUE,
+            0, sizeof(int) *tailleCopyList* (nbProcess), groupPaths, 0, NULL, NULL);
+    clEnqueueReadBuffer(file_execution, groupPathTaille_buffer, CL_TRUE,
+            0, sizeof(int) * (nbProcess), groupPathTaille, 0, NULL, NULL);
+
+    for(int i=0; i<tailleCopyList*(nbProcess); i++){
+        printf(" %d ", groupPaths[i]);
+    }
+
+
+
+
+
+
+
 
     // Affichage des résultats
     printf("\nOuahhh\n");
@@ -218,7 +286,10 @@ int main (int argc, const char * argv[])
     free(outputData);
     clReleaseMemObject(listPoint_buffer);
     clReleaseMemObject(pointForPath_buffer);
-    clReleaseMemObject(output_buffer);
+    clReleaseMemObject(taillePoint_buffer);
+    clReleaseMemObject(nbPrc_buffer);
+    clReleaseMemObject(paths_buffer);
+    clReleaseMemObject(taillePath_buffer);
     clReleaseProgram(programme);
     clReleaseKernel(noyau);
     clReleaseCommandQueue(file_execution);

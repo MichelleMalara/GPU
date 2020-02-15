@@ -86,6 +86,7 @@ int main(int argc, char** argv)
             displayListPointInterface(ren, list, xmin, ymin, xmax, ymax);
             listIndiceList Q = separatePointList(list, 4);
             hedge edgeTest = getPath(list, 2);
+            displayHedge(edgeTest);
             //displayHedgeInterface(ren, edgeTest, xmin, ymin, xmax, ymax);
 
             listIndice listIndiceTest = constructeurListIndiceTaille(getTailleList2D(list)); 

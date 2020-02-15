@@ -39,7 +39,7 @@ void setYPoint2D(Point2D *point, float y2){
 
 float sqrt_dif(Point2D p1, Point2D p2){
   // ||p1-p2||^2
-  return getXPoint2D(p1)-getXPoint2D(p2)*getXPoint2D(p1)-getXPoint2D(p2)+getYPoint2D(p1)-getYPoint2D(p2)*getYPoint2D(p1)-getYPoint2D(p2);
+  return (getXPoint2D(p1)-getXPoint2D(p2))*(getXPoint2D(p1)-getXPoint2D(p2))+(getYPoint2D(p1)-getYPoint2D(p2))*(getYPoint2D(p1)-getYPoint2D(p2));
 }
 
 int orientation(Point2D p1, Point2D p2, Point2D p3){
@@ -58,5 +58,64 @@ float distanceBis(Point2D p1, Point2D p2){
 
 int isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4){
     return (getXPoint2D(p2)-getXPoint2D(p1))*(getYPoint2D(p4)-getYPoint2D(p3)) - (getYPoint2D(p2)-getYPoint2D(p1))*(getXPoint2D(p4)-getXPoint2D(p3)) == 0;
+}
+
+float getXPointProj(Point2D p1, Point2D p2){
+    return p1.y - p2.y;
+}
+
+float getYPointProj(Point2D p1, Point2D p2){
+    return sqrt_dif(p1,p2);
+}
+
+int orientationProj(Point2D p1, Point2D p2, Point2D p3, Point2D pProj){
+  float val1 = (getYPointProj(p2,pProj) - getYPointProj(p1,pProj)) * (getXPointProj(p3, pProj) - getXPointProj(p2,pProj));
+  float val2 = (getXPointProj(p2,pProj) - getXPointProj(p1,pProj)) * (getYPointProj(p3,pProj) - getYPointProj(p2, pProj));
+  return val1<val2;
+}
+
+
+int isLeftSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc){
+
+    if(getYPoint2D(listPoint[separator[taillePoint*actualPrc]]) >= getYPoint2D(listPoint[pointIndice])){
+        return (getXPoint2D(listPoint[separator[taillePoint*actualPrc]]) >= getXPoint2D(listPoint[pointIndice]));
+    }
+    if(getYPoint2D(listPoint[separator[tailleSeparator[actualPrc]-1]]) <= getYPoint2D(listPoint[pointIndice])){
+        return (getXPoint2D(listPoint[separator[tailleSeparator[actualPrc]-1]]) >= getXPoint2D(listPoint[pointIndice]));
+    }
+    for(int i=0; i<tailleSeparator[actualPrc]; i++){
+        if(separator[actualPrc*taillePoint+i]==pointIndice){
+            return 1;
+        }
+    }
+    for(int j=0; j<tailleSeparator[actualPrc]-1; j++){
+        if(getYPoint2D(listPoint[separator[actualPrc*taillePoint+j]]) <= getYPoint2D(listPoint[pointIndice])
+                && getYPoint2D(listPoint[separator[actualPrc*taillePoint+j+1]]) > getYPoint2D(listPoint[pointIndice])){
+            return (orientation(listPoint[separator[actualPrc*taillePoint+j]],listPoint[separator[actualPrc*taillePoint+j+1]],listPoint[pointIndice]));
+        }
+    }
+    return 0;
+}
+
+int isRightSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc){
+
+    if(getYPoint2D(listPoint[separator[taillePoint*actualPrc]]) >= getYPoint2D(listPoint[pointIndice])){
+        return (getXPoint2D(listPoint[separator[taillePoint*actualPrc]]) <= getXPoint2D(listPoint[pointIndice]));
+    }
+    if(getYPoint2D(listPoint[separator[tailleSeparator[actualPrc]-1]]) <= getYPoint2D(listPoint[pointIndice])){
+        return (getXPoint2D(listPoint[separator[tailleSeparator[actualPrc]-1]]) <= getXPoint2D(listPoint[pointIndice]));
+    }
+    for(int i=0; i<tailleSeparator[actualPrc]; i++){
+        if(separator[actualPrc*taillePoint+i]==pointIndice){
+            return 1;
+        }
+    }
+    for(int j=0; j<tailleSeparator[actualPrc]-1; j++){
+        if(getYPoint2D(listPoint[separator[actualPrc*taillePoint+j]]) <= getYPoint2D(listPoint[pointIndice])
+                && getYPoint2D(listPoint[separator[actualPrc*taillePoint+j+1]]) > getYPoint2D(listPoint[pointIndice])){
+            return (!orientation(listPoint[separator[actualPrc*taillePoint+j]],listPoint[separator[actualPrc*taillePoint+j+1]],listPoint[pointIndice]));
+        }
+    }
+    return 0;
 }
 

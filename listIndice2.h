@@ -11,7 +11,8 @@ struct listIndice{
     int* indice;
 };
 
-listIndice Convex_HullIndice(listPoint2D pts);
+int isRightSideList(listPoint2D listPoint, listIndice separator, int pointIndice);
+int isLeftSideList(listPoint2D listPoint, listIndice separator, int pointIndice);
 #endif
 
 

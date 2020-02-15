@@ -26,4 +26,9 @@ int orientation(Point2D p1, Point2D p2, Point2D p3);
 float distanceBis(Point2D p1, Point2D p2);
 int isColineaire(Point2D p1, Point2D p2, Point2D p3, Point2D p4);
 
+float getXPointProj(Point2D p1, Point2D p2);
+float getYPointProj(Point2D p1, Point2D p2);
+int orientationProj(Point2D p1, Point2D p2, Point2D p3, Point2D pProj);
+int isRightSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc);
+int isLeftSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc);
 #endif

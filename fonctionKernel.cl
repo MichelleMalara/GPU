@@ -1,10 +1,6 @@
 #include "point2.h"
-#include "listPoint2.h"
-#include "listIndice.h"
+
 inline int doubleMoi(int x);
-inline float getXListPoint2D(Point2D point);
-inline float getYListPoint2D(Point2D point);
-inline int getTailleList2D(Point2D point);
 inline float sqrt_diff(Point2D p1, Point2D p2);
 
 __kernel void auCarre(__global listPoint2D *listPoint, __global listIndice *pointForPath, __global listPoint2D *output)

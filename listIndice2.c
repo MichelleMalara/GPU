@@ -1,38 +1,44 @@
-listIndice Convex_HullIndice(listPoint2D pts){
-  // Calcul de l'envelope convexe
-  int n = getTailleList2D(pts);
-  // Il faut plus de 3 points
-  if (n < 3){
-    //printf("Pas assez de point \n");
-    //exit(1);
-  }
-  // trouver le point le plus gauche
-  int l = 0;
-  for(int i = 1; i < n; i++) {
-    if(getXListPoint2D(pts,i) < getXListPoint2D(pts,l)){
-      l=i;
+int isLeftSideList(listPoint2D listPoint, listIndice separator, int pointIndice){
+
+    if(getYPoint2D(listPoint.point[separator.indice[0]]) >= getYPoint2D(listPoint.point[pointIndice])){
+        return (getXPoint2D(listPoint.point[separator.indice[0]]) >= getXPoint2D(listPoint.point[pointIndice]));
     }
-    else if(getYListPoint2D(pts,i) < getYListPoint2D(pts,l) && getXListPoint2D(pts,i) == getXListPoint2D(pts,l)){
-        l=i;
+    if(getYPoint2D(listPoint.point[separator.indice[separator.taille-1]]) <= getYPoint2D(listPoint.point[pointIndice])){
+        return (getXPoint2D(listPoint.point[separator.indice[separator.taille-1]]) >= getXPoint2D(listPoint.point[pointIndice]));
     }
-  }
-  // init res avec le point le plus à gauche
-  listIndice hull = constructeurListIndice();
-  // Construction hull
-  int p = l, q;
-  int flag = 0;
-  do{
-    addIndice(&hull, p);
-    q = (p + 1) % n;
-    for (int x = 0; x < n; x++){
-      // On cherche le point q le plus "counterclockwise"
-      if (orientation(getPoint2D(pts,p), getPoint2D(pts,x), getPoint2D(pts,q))){
-        q = x; // x est plus "counterclockwise" que q
-      }
+    for(int i=0; i<separator.taille; i++){
+        if(separator.indice[i]==pointIndice){
+            return 1;
+        }
     }
-    flag = (getXListPoint2D(pts, p) >= getXListPoint2D(pts, q));
-    p = q; // à la fin c'est q le plus "counterclockwise"
-  } while (p != l && !flag);  // On continu jusqu'a revenir au 1er*/
-  return hull;
+    for(int j=0; j<separator.taille-1; j++){
+        if(getYPoint2D(listPoint.point[separator.indice[j]]) <= getYPoint2D(listPoint.point[pointIndice])
+                && getYPoint2D(listPoint.point[separator.indice[j+1]]) > getYPoint2D(listPoint.point[pointIndice])){
+            return (orientation(listPoint.point[separator.indice[j]],listPoint.point[separator.indice[j+1]],listPoint.point[pointIndice]));
+        }
+    }
+    return 0;
+}
+
+
+int isRightSideList(listPoint2D listPoint, listIndice separator, int pointIndice){
+    if(getYPoint2D(listPoint.point[separator.indice[0]]) >= getYPoint2D(listPoint.point[pointIndice])){
+        return (getXPoint2D(listPoint.point[separator.indice[0]]) <= getXPoint2D(listPoint.point[pointIndice]));
+    }
+    if(getYPoint2D(listPoint.point[separator.indice[separator.taille-1]]) <= getYPoint2D(listPoint.point[pointIndice])){
+        return (getXPoint2D(listPoint.point[separator.indice[separator.taille-1]]) <= getXPoint2D(listPoint.point[pointIndice]));
+    }
+    for(int i=0; i<separator.taille; i++){
+        if(separator.indice[i]==pointIndice){
+            return 1;
+        }
+    }
+    for(int j=0; j<separator.taille-1; j++){
+        if(getYPoint2D(listPoint.point[separator.indice[j]]) <= getYPoint2D(listPoint.point[pointIndice])
+                && getYPoint2D(listPoint.point[separator.indice[j+1]]) > getYPoint2D(listPoint.point[pointIndice])){
+            return (!orientation(listPoint.point[separator.indice[j]],listPoint.point[separator.indice[j+1]],listPoint.point[pointIndice]));
+        }
+    }
+    return 0;
 }
 
