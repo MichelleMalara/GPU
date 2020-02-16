@@ -90,34 +90,3 @@ listPoint2D getPointMaillage(maillage leMaillage){
 int getTailleMaillage(maillage leMaillage){
     return leMaillage.taille;
 }
-
-
-// ------ fonction triangulation ------ //
-
-/*maillage getTriangulation(listIndiceList paths, int nbProcess){
-  // calcul de la triangulation parallélisé
-  // retourner une liste de liste d'indice de taille 3
-    maillage newMaillage;
-    newMaillage.taille = nbProcess;
-    newMaillage.listIndiceList = (listIndiceList*) malloc(nbProcess*sizeof(listIndiceList));
-    newMaillage.listPoint = paths.listPoint;
-
-#pragma omp parallel
-    {
-        int th_id = omp_get_thread_num();
-        listPoint2D projec;
-        if(th_id < nbProcess){
-            if(th_id == 0){
-                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,NULL,&(paths.separatePath[0])),th_id);
-            }
-            else if(th_id == nbProcess -1){
-                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,&(paths.separatePath[th_id-1]),NULL),th_id);
-            }
-            else{
-                setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint,&(paths.separatePath[th_id-1]),&(paths.separatePath[th_id])),th_id);
-            }
-            //setMaillage(&newMaillage, getOneTriangulation(paths.indiceList[th_id],paths.listPoint),th_id);
-        }
-    }
-    return newMaillage;
-}*/

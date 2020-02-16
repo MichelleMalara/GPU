@@ -1,7 +1,4 @@
 #include "point2.h"
-#include "listPoint2.h"
-#include "listIndice.h"
-inline int doubleMoi(int x);
 inline float sqrt_diff(Point2D p1, Point2D p2);
 
 __kernel void getPath(__global Point2D *listPoint, __global int *pointForPath, __global int *taillePoint, __global int *nbPr, __global int *paths, __global int *pathTaille)
@@ -184,12 +181,10 @@ __kernel void getGroup(__global Point2D *listPoint, __global int *paths,__global
         }
         groupPathTaille[id]=compteur;
     }
-    //setListIndice(&newListIndiceList, group, id);
-    
 }
 
 
-__kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths,__global int *taillePath, __global int *taillePoint, __global int *nbPrc, __global int *groupPath, __global int *groupPathTaille, __global int *maillage, __global int *maillageTaille)
+__kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths,__global int *taillePath, __global int *taillePoint, __global int *nbPrc, __global int *groupPath, __global int *groupPathTaille, __global int *maillage2, __global int *maillageTaille)
 {
     int id = get_global_id(0);
     int compteur = 0;
@@ -203,6 +198,7 @@ __kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths
     float yCentre = 0.;
     float rayon = 0.;
     float distance = 0.;
+    int flag2 = 1;
     for(int i=0; i<n-2; i++){
         for(int j=i+1; j<n-1; j++){
             for(int k=j+1; k<n; k++){
@@ -223,11 +219,11 @@ __kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths
                          }
                     }
                 }
-                if(flag){
-                    if(compteur < 2*taillePoint[0]-2){
-                        maillage[id*6*taillePoint[0]+3*compteur]=a;
-                        maillage[id*6*taillePoint[0]+3*compteur+1]=b;
-                        maillage[id*6*taillePoint[0]+3*compteur+2]=c;
+                if(flag==1){
+                    if(compteur < (2*taillePoint[0]-2)){
+                        maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                        maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                        maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
                         compteur++;
                     }
                 }

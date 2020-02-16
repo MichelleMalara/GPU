@@ -4,7 +4,7 @@ Ce projet consiste à calculer la triangulation de Delaunay pour un ensemble de 
 
 
 ## Présrequis
-Instalation d'openCL
+Installation d'openCL
 
 
 ## Interface, bibliothèque

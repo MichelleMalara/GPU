@@ -9,9 +9,9 @@ OMP_FLAGS= -lOpenCL -lm -lSDL2
 COMMON_DIR=./
 
 # Compile all executable
-all: testGPU.o
+all: maillageGPU.o
 
-testGPU.o: testGPU.c hedge.c maillage.c matriceTriangle.c listIndiceList.c listIndice.c listPoint.c point.c
+maillageGPU.o: maillageGPU.c hedge.c maillage.c matriceTriangle.c listIndiceList.c listIndice.c listPoint.c point.c
 	$(CC) $^ $(CCFLAGS) $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@
 
 #pi: pi.c
