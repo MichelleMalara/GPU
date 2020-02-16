@@ -14,6 +14,16 @@ listIndice constructeurListIndice(){
     return newList;
 }
 
+listIndice constructeurTriangle(int a, int b, int c){
+    listIndice newList;
+    newList.taille = 3;
+    newList.indice = (int*)malloc(3*sizeof(int));
+    newList.indice[0]=a;
+    newList.indice[1]=b;
+    newList.indice[2]=c;
+    return newList;
+}
+
 listIndice constructeurListIndiceTaille(int taille2){
     listIndice newList;
     newList.taille = taille2;

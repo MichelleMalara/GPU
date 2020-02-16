@@ -189,3 +189,50 @@ __kernel void getGroup(__global Point2D *listPoint, __global int *paths,__global
 }
 
 
+__kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths,__global int *taillePath, __global int *taillePoint, __global int *nbPrc, __global int *groupPath, __global int *groupPathTaille, __global int *maillage, __global int *maillageTaille)
+{
+    int id = get_global_id(0);
+    int compteur = 0;
+    int n = groupPathTaille[id];
+    int a = 0;
+    int b = 0;
+    int c = 0;
+    int d = 0;
+    int flag = 0;
+    float xCentre = 0.;
+    float yCentre = 0.;
+    float rayon = 0.;
+    float distance = 0.;
+    for(int i=0; i<n-2; i++){
+        for(int j=i+1; j<n-1; j++){
+            for(int k=j+1; k<n; k++){
+
+                a = groupPath[id*taillePoint[0]+i];
+                b = groupPath[id*taillePoint[0]+j];
+                c = groupPath[id*taillePoint[0]+k];
+
+                calcCentreCL(&xCentre, &yCentre, listPoint[a], listPoint[b], listPoint[c]);
+                rayon = distanceBisFloat(listPoint[a], xCentre, yCentre);
+                flag = 1;
+                for(int l=0; l<n; l++){
+                    d = groupPath[id*taillePoint[0]+l];
+                    if(d != a && d != b && d != c){
+                         distance = distanceBisFloat(listPoint[b], xCentre, yCentre);
+                         if(distance < rayon){
+                             flag = 0;
+                         }
+                    }
+                }
+                if(flag){
+                    if(compteur < 2*taillePoint[0]-1){
+                        maillage[id*6*taillePoint[0]+3*compteur]=a;
+                        maillage[id*6*taillePoint[0]+3*compteur+1]=b;
+                        maillage[id*6*taillePoint[0]+3*compteur+2]=c;
+                        compteur++;
+                    }
+                }
+            }
+        }
+    }
+    maillageTaille[id] = compteur;
+}

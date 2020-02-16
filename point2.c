@@ -119,3 +119,33 @@ int isRightSideListCL(Point2D *listPoint, int* separator, int pointIndice, int t
     return 0;
 }
 
+void calcCentreCL(float *x, float *y, Point2D p1, Point2D p2, Point2D p3){
+  float a1,b1,c1,a2,b2,c2,xbis,ybis;
+  
+  if(isColineaire(p1,p3,p1,p2)){
+      x[0] = (getXPoint2D(p1)+getXPoint2D(p2)+getXPoint2D(p3))/3;
+      y[0] = (getYPoint2D(p1),getYPoint2D(p2),getYPoint2D(p3))/3;
+  }
+  else{
+      // calc coef
+      a1 = 2*(getXPoint2D(p2)-getXPoint2D(p1));
+      b1 = 2*(getYPoint2D(p2)-getYPoint2D(p1));
+      c1 = getXPoint2D(p1)*getXPoint2D(p1) + getYPoint2D(p1)*getYPoint2D(p1) - getXPoint2D(p2)*getXPoint2D(p2) - getYPoint2D(p2)*getYPoint2D(p2);
+
+      a2 = 2*(getXPoint2D(p3)-getXPoint2D(p1));
+      b2 = 2*(getYPoint2D(p3)-getYPoint2D(p1));
+      c2 = getXPoint2D(p1)*getXPoint2D(p1) + getYPoint2D(p1)*getYPoint2D(p1) - getXPoint2D(p3)*getXPoint2D(p3) - getYPoint2D(p3)*getYPoint2D(p3);
+      // calc coordoné centre
+      xbis = (b1*c2-b2*c1)/(a1*b2-b1*a2);
+      ybis = (a2*c1-a1*c2)/(a1*b2-b1*a2);
+      // creation point
+      x[0] = xbis;
+      y[0] = ybis;
+  }
+}
+
+float distanceBisFloat(Point2D p, float x, float y){
+  float dcarre = (getXPoint2D(p)-x)*(getXPoint2D(p)-x)
+   + (getYPoint2D(p)-y)*(getYPoint2D(p)-y);
+  return dcarre;
+}

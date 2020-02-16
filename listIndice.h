@@ -13,6 +13,7 @@ struct listIndice{
 
 // ------ constructeur
 listIndice constructeurListIndice();
+listIndice constructeurTriangle(int a, int b, int c);
 listIndice constructeurListIndiceTaille(int taille);
 listIndice constructeurListIndiceBtw(int deb, int fin);
 // ------ getteur

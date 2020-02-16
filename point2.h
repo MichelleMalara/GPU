@@ -31,4 +31,6 @@ float getYPointProj(Point2D p1, Point2D p2);
 int orientationProj(Point2D p1, Point2D p2, Point2D p3, Point2D pProj);
 int isRightSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc);
 int isLeftSideListCL(Point2D *listPoint, int* separator, int pointIndice, int taillePoint, int *tailleSeparator, int nbPrc, int actualPrc);
+void calcCentreCL(float *x, float *y, Point2D p1, Point2D p2, Point2D p3);
+float distanceBisFloat(Point2D p, float x, float y);
 #endif

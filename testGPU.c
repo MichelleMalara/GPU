@@ -265,6 +265,68 @@ int main (int argc, const char * argv[])
 
 
 
+    
+    cl_mem maillage_buffer;
+    cl_mem maillageTaille_buffer;
+    int *maillage = malloc(6*sizeof(int)*tailleCopyList*(nbProcess));
+    for(int i=0; i<6*tailleCopyList*(nbProcess); i++){
+        maillage[i]=-1;
+    }
+    int *maillageTaille = malloc(sizeof(int)*(nbProcess));
+    for(int i=0; i<nbProcess; i++){
+        maillageTaille[i]=0;
+    }
+    // Association des variables de données avec le tampon d'échange
+    /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
+    listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(Point2D)*tailleCopyList, copyList.point, &codeErreur);
+    paths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * tailleCopyList* (nbProcess-1), paths, &codeErreur);
+    taillePath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess-1), taillePath, &codeErreur);
+    taillePoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &copyList.taille, &codeErreur);
+    nbPrc_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int), &nbProcess, &codeErreur);
+    groupPaths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * tailleCopyList* (nbProcess), groupPaths, &codeErreur);
+    groupPathTaille_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess), groupPathTaille, &codeErreur);
+    maillage_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * 6*tailleCopyList* (nbProcess), maillage, &codeErreur);
+    maillageTaille_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+            sizeof(int) * (nbProcess), maillageTaille, &codeErreur);
+
+
+    // Construire le noyau
+    noyau = clCreateKernel(programme, "getMaillageKernel", &codeErreur);
+
+    // Associer les tampons d'échanges avec
+    // les arguments des fonctions à paralléliser
+    codeErreur = clSetKernelArg(noyau, 0, sizeof(listPoint_buffer), &listPoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 1, sizeof(paths_buffer), &paths_buffer);
+    codeErreur = clSetKernelArg(noyau, 2, sizeof(taillePath_buffer), &taillePath_buffer);
+    codeErreur = clSetKernelArg(noyau, 3, sizeof(taillePoint_buffer), &taillePoint_buffer);
+    codeErreur = clSetKernelArg(noyau, 4, sizeof(nbPrc_buffer), &nbPrc_buffer);
+    codeErreur = clSetKernelArg(noyau, 5, sizeof(groupPaths_buffer), &groupPaths_buffer);
+    codeErreur = clSetKernelArg(noyau, 6, sizeof(groupPathTaille_buffer), &groupPathTaille_buffer);
+    codeErreur = clSetKernelArg(noyau, 7, sizeof(maillage_buffer), &maillage_buffer);
+    codeErreur = clSetKernelArg(noyau, 8, sizeof(maillageTaille_buffer), &maillageTaille_buffer);
+
+    // Mettre le noyau dans la file d'execution
+    size_t dimensions_globales3[] = { QTE_DONNEES, 0, 0 };
+    codeErreur = clEnqueueNDRangeKernel(file_execution, noyau, 1, NULL, 
+            dimensions_globales3, NULL, 0, NULL, NULL);
+
+    // Récupération des résultats dans le tampon
+    clEnqueueReadBuffer(file_execution, maillage_buffer, CL_TRUE,
+            0, sizeof(int) *6*tailleCopyList* (nbProcess), maillage, 0, NULL, NULL);
+    clEnqueueReadBuffer(file_execution, maillageTaille_buffer, CL_TRUE,
+            0, sizeof(int) * (nbProcess), maillageTaille, 0, NULL, NULL);
+
+
+
 
 
 

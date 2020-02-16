@@ -30,6 +30,25 @@ maillage constructeurMaillageTaille(int taille2,listPoint2D list){
   return newList;
 }
 
+maillage constructMaillageFromCL(int *maillage, int *maillageTaille, int nbPrc, listPoint2D listPoint){
+    maillage newList;
+    newList.taille = nbPrc;
+    newList.listPoint = listPoint;
+    newList.listIndiceList = (listIndiceList*) malloc(sizeof(listIndiceList)*nbPrc);
+    listIndice triangle;
+    int a=0, b=0, c=0;
+    for(int i=0; i<nbPrc; i++){
+        newList.listIndice[i] = constructeurListIndiceList(listPoint);
+        for(int j=0; j<maillageTaille[i]; j++){
+            a = maillage[6*i*getTailleList2D(listPoint)+3*j];
+            b = maillage[6*i*getTailleList2D(listPoint)+3*j+1];
+            c = maillage[6*i*getTailleList2D(listPoint)+3*j+2];
+            triangle = constructeurTriangle(a,b,c);
+            addListIndiceList(&(newList.listIndice[i]),triangle);
+        }
+    }
+    return newList;
+}
 
 // --------- setteur --------- //
 

@@ -17,6 +17,7 @@ struct maillage{
 // ------ constructeur
 maillage constructeurMaillage(listPoint2D list);
 maillage constructeurMaillageTaille(int taille2,listPoint2D list);
+maillage constructMaillageFromCL(int *maillage, int *maillageTaille, int nbPrc, listPoint2D listPoint);
 // ------ getteur
 listIndiceList getListIndiceList(maillage leMaillage, int i);
 listPoint2D getPointMaillage(maillage leMaillage);
