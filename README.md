@@ -36,11 +36,11 @@ Le fichier fonctionKernel2.cl contient la fonction exécutée par le kernel. Ell
 
 Fichier : constructeurListPoint.c
 
-- mettre le nombre de points désiré dans la variable : nbPoint
+1 - mettre le nombre de points désiré dans la variable : nbPoint
 
-- choisir les valeurs de coordonnées max et min dans les variables : MAX et MIN
+2 - choisir les valeurs de coordonnées max et min dans les variables : MAX et MIN
 
-- choisir le nom du fichier sortant : file = fopen("NOM_FICHIER", "w+");
+3 - choisir le nom du fichier sortant : file = fopen("NOM_FICHIER", "w+");
 
 
 Compiler et exécuter
