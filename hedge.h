@@ -26,7 +26,7 @@ void addHedge(hedge *H, listPoint2D listPoint);
 void addHedgeByPoints(hedge *H, Point2D p1, Point2D p2);
 
 // ------ fonction triangulation
-hedge calcHedgeDelaunay(listIndiceList list, int nbProcess);
+hedge calcHedgeDelaunay(listPoint2D list, int nbProcess, matriceTriangle matAdj);
 void addPathEdge(hedge *edge, listIndice list, listPoint2D listPoint);
 hedge getPath(listPoint2D listPoint, int nbProcess);
 //listPointList separatePointList(listPoint2D listPoint, int nbProcess);

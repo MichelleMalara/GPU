@@ -2,11 +2,135 @@
 #include <stdio.h>
 #include "CL/opencl.h"
 #include "listPoint.h"
+#include <SDL2/SDL.h>
 #include "listIndiceList.h"
+#include "maillage.h"
+#include "matriceTriangle.h"
 #include "hedge.h"
 #include <math.h>
 
 #define QTE_DONNEES 20
+
+
+
+SDL_Point* getSDLPoint(listPoint2D listPoint, float xmin, float ymin, float xmax, float ymax){
+    int listTaille = getTailleList2D(listPoint);
+    SDL_Point* list = (SDL_Point*) malloc(listTaille*sizeof(SDL_Point));
+    for(int i=0; i<listTaille; i++){
+        list[i].x = 640*(getXListPoint2D(listPoint,i) - xmin)/(xmax-xmin);
+        list[i].y = 480*(getYListPoint2D(listPoint,i) - ymin)/(ymax-ymin);
+    }
+    return list;
+}
+
+void displayListPointInterface(SDL_Renderer* ren, listPoint2D listPoint, float xmin, float ymin, float xmax, float ymax){
+    SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    if (SDL_RenderDrawPoints(ren, getSDLPoint(listPoint,xmin,ymin,xmax,ymax), getTailleList2D(listPoint)) != 0){
+        fprintf(stderr,"SDL_RenderDrawPoints Error: %s",SDL_GetError());
+        SDL_Quit();
+    }
+    //SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    SDL_RenderPresent(ren);
+
+}
+
+void displayHedgeInterface(SDL_Renderer* ren, hedge edge, float xmin, float ymin, float xmax, float ymax){
+    SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    listPoint2D actualEdge;
+    for(int i=0; i<getTailleHedge(edge); i++){
+        actualEdge = getOneHedge(edge, i);
+        if (SDL_RenderDrawLines(ren, getSDLPoint(getOneHedge(edge,i),xmin,ymin,xmax,ymax),2) != 0){
+            fprintf(stderr,"SDL_RenderDrawLine Error: %s",SDL_GetError());
+            SDL_Quit();
+        }
+    }
+    //SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    SDL_RenderPresent(ren);
+}
+
+
+int affichageMailleSDL(listPoint2D list, hedge maille)
+{
+    /* Initialisation simple */
+    if (SDL_Init(SDL_INIT_VIDEO) != 0 )
+    {
+        fprintf(stdout,"Échec de l'initialisation de la SDL (%s)\n",SDL_GetError());
+        return -1;
+    }
+
+    else{
+        /* Création de la fenêtre */
+        SDL_Window* pWindow = NULL;
+        pWindow = SDL_CreateWindow("Ma première application SDL2",SDL_WINDOWPOS_UNDEFINED,
+                                                                  SDL_WINDOWPOS_UNDEFINED,
+                                                                  640,
+                                                                  480,
+                                                                  SDL_WINDOW_SHOWN);
+
+        if( pWindow )
+        {
+            SDL_Renderer *ren = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+            if (ren == NULL){
+                SDL_DestroyWindow(pWindow);
+                fprintf(stderr,"SDL_CreateRenderer Error: %s",SDL_GetError());
+                SDL_Quit();
+                return 1;
+            }
+            SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+            SDL_Point point = {320, 240};
+            if (SDL_RenderDrawPoints(ren, &point, 1) != 0){
+                SDL_DestroyWindow(pWindow);
+                fprintf(stderr,"SDL_RenderDrawPoints Error: %s",SDL_GetError());
+                SDL_Quit();
+                return 1;
+            }
+            float xmin = getXmin(list);
+            float xmax = getXmax(list);
+            float ymin = getYmin(list);
+            float ymax = getYmax(list);
+            //displayListPointInterface(ren, Convex_Hull(list), xmin, ymin, xmax, ymax);
+            displayListPointInterface(ren, list, xmin, ymin, xmax, ymax);
+            //displayHedgeInterface(ren, edgeTest, xmin, ymin, xmax, ymax);
+
+
+
+            //displayListIndiceList(Q);
+            displayHedgeInterface(ren, maille, xmin, ymin, xmax, ymax);
+            SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+   
+            char cont = 1; // Détermine si on continue la boucle principale
+            SDL_Event event;
+            while ( cont != 0 )
+            {
+                while ( SDL_PollEvent(&event) )
+                {
+                    switch (event.type) 
+                    {
+                        case SDL_QUIT:
+                            cont=0;
+                            break;
+                    }
+                }
+
+                // On a traité les événements, on peut continuer le jeu
+            }
+
+            SDL_DestroyWindow(pWindow);
+        }
+        else
+        {
+            fprintf(stderr,"Erreur de création de la fenêtre: %s\n",SDL_GetError());
+        }
+    }
+
+    SDL_Quit();
+
+    return 0;
+}
+
+
+
+
 char* read_file(char* fileName){
 
     FILE* fichier = NULL;
@@ -189,9 +313,9 @@ int main (int argc, const char * argv[])
     clEnqueueReadBuffer(file_execution, taillePath_buffer, CL_TRUE,
             0, sizeof(int) * (nbProcess-1), taillePath, 0, NULL, NULL);
 
-    for(int i=0; i<tailleCopyList*(nbProcess-1); i++){
+    /*for(int i=0; i<tailleCopyList*(nbProcess-1); i++){
         printf(" %d ", paths[i]);
-    }
+    }*/
 
 
 
@@ -216,16 +340,10 @@ int main (int argc, const char * argv[])
     // Association des variables de données avec le tampon d'échange
     /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
-    listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(Point2D)*tailleCopyList, copyList.point, &codeErreur);
     paths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * tailleCopyList* (nbProcess-1), paths, &codeErreur);
     taillePath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * (nbProcess-1), taillePath, &codeErreur);
-    taillePoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int), &copyList.taille, &codeErreur);
-    nbPrc_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int), &nbProcess, &codeErreur);
     groupPaths_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * tailleCopyList* (nbProcess), groupPaths, &codeErreur);
     groupPathTaille_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -257,9 +375,13 @@ int main (int argc, const char * argv[])
     clEnqueueReadBuffer(file_execution, groupPathTaille_buffer, CL_TRUE,
             0, sizeof(int) * (nbProcess), groupPathTaille, 0, NULL, NULL);
 
-    for(int i=0; i<tailleCopyList*(nbProcess); i++){
+    /*for(int i=0; i<tailleCopyList*(nbProcess); i++){
         printf(" %d ", groupPaths[i]);
     }
+    printf("\n\n\n");
+    for(int i=0; i<(nbProcess); i++){
+        printf(" %d ", groupPathTaille[i]);
+    }*/
 
 
 
@@ -268,9 +390,9 @@ int main (int argc, const char * argv[])
     
     cl_mem maillage_buffer;
     cl_mem maillageTaille_buffer;
-    int *maillage = malloc(6*sizeof(int)*tailleCopyList*(nbProcess));
+    int *maillage2 = malloc(6*sizeof(int)*tailleCopyList*(nbProcess));
     for(int i=0; i<6*tailleCopyList*(nbProcess); i++){
-        maillage[i]=-1;
+        maillage2[i]=-1;
     }
     int *maillageTaille = malloc(sizeof(int)*(nbProcess));
     for(int i=0; i<nbProcess; i++){
@@ -279,22 +401,12 @@ int main (int argc, const char * argv[])
     // Association des variables de données avec le tampon d'échange
     /*input_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * QTE_DONNEES, inputData, &codeErreur);*/
-    listPoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(Point2D)*tailleCopyList, copyList.point, &codeErreur);
-    paths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int) * tailleCopyList* (nbProcess-1), paths, &codeErreur);
-    taillePath_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int) * (nbProcess-1), taillePath, &codeErreur);
-    taillePoint_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int), &copyList.taille, &codeErreur);
-    nbPrc_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int), &nbProcess, &codeErreur);
     groupPaths_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * tailleCopyList* (nbProcess), groupPaths, &codeErreur);
     groupPathTaille_buffer = clCreateBuffer(contexte, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * (nbProcess), groupPathTaille, &codeErreur);
     maillage_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(int) * 6*tailleCopyList* (nbProcess), maillage, &codeErreur);
+            sizeof(int) * 6*tailleCopyList* (nbProcess), maillage2, &codeErreur);
     maillageTaille_buffer = clCreateBuffer(contexte, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
             sizeof(int) * (nbProcess), maillageTaille, &codeErreur);
 
@@ -321,14 +433,34 @@ int main (int argc, const char * argv[])
 
     // Récupération des résultats dans le tampon
     clEnqueueReadBuffer(file_execution, maillage_buffer, CL_TRUE,
-            0, sizeof(int) *6*tailleCopyList* (nbProcess), maillage, 0, NULL, NULL);
+            0, sizeof(int) *6*tailleCopyList* (nbProcess), maillage2, 0, NULL, NULL);
     clEnqueueReadBuffer(file_execution, maillageTaille_buffer, CL_TRUE,
             0, sizeof(int) * (nbProcess), maillageTaille, 0, NULL, NULL);
 
 
+    clReleaseMemObject(listPoint_buffer);
+    clReleaseMemObject(pointForPath_buffer);
+    clReleaseMemObject(taillePoint_buffer);
+    clReleaseMemObject(nbPrc_buffer);
+    clReleaseMemObject(paths_buffer);
+    clReleaseMemObject(taillePath_buffer);
+    clReleaseMemObject(maillage_buffer);
+    clReleaseMemObject(maillageTaille_buffer);
+    clReleaseMemObject(groupPaths_buffer);
+    clReleaseMemObject(groupPathTaille_buffer);
+
+    free(paths);
+    free(taillePath);
+    free(groupPaths);
+    free(groupPathTaille);
+    maillage leMaillageCL = constructMaillageFromCL(maillage2, maillageTaille, nbProcess, copyList);
+    matriceTriangle matAdj = calcmatTriDelaunay(nbProcess, leMaillageCL);
+    hedge resultat = calcHedgeDelaunay(copyList, nbProcess, matAdj);
 
 
-
+    printf("\n\n\nVoila :\n");
+    displayHedge(resultat);
+    int init = affichageMailleSDL(copyList, resultat);
 
     // Affichage des résultats
     printf("\nOuahhh\n");
@@ -346,12 +478,6 @@ int main (int argc, const char * argv[])
     // Libération des ressources
     free(inputData);
     free(outputData);
-    clReleaseMemObject(listPoint_buffer);
-    clReleaseMemObject(pointForPath_buffer);
-    clReleaseMemObject(taillePoint_buffer);
-    clReleaseMemObject(nbPrc_buffer);
-    clReleaseMemObject(paths_buffer);
-    clReleaseMemObject(taillePath_buffer);
     clReleaseProgram(programme);
     clReleaseKernel(noyau);
     clReleaseCommandQueue(file_execution);

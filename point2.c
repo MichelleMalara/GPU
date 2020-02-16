@@ -123,8 +123,8 @@ void calcCentreCL(float *x, float *y, Point2D p1, Point2D p2, Point2D p3){
   float a1,b1,c1,a2,b2,c2,xbis,ybis;
   
   if(isColineaire(p1,p3,p1,p2)){
-      x[0] = (getXPoint2D(p1)+getXPoint2D(p2)+getXPoint2D(p3))/3;
-      y[0] = (getYPoint2D(p1),getYPoint2D(p2),getYPoint2D(p3))/3;
+      *x = (getXPoint2D(p1)+getXPoint2D(p2)+getXPoint2D(p3))/3;
+      *y = (getYPoint2D(p1),getYPoint2D(p2),getYPoint2D(p3))/3;
   }
   else{
       // calc coef
@@ -139,8 +139,8 @@ void calcCentreCL(float *x, float *y, Point2D p1, Point2D p2, Point2D p3){
       xbis = (b1*c2-b2*c1)/(a1*b2-b1*a2);
       ybis = (a2*c1-a1*c2)/(a1*b2-b1*a2);
       // creation point
-      x[0] = xbis;
-      y[0] = ybis;
+      *x = xbis;
+      *y = ybis;
   }
 }
 

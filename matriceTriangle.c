@@ -58,9 +58,9 @@ void displayMatriceTriangle(matriceTriangle matTri){
     }
 }
 
-matriceTriangle calcmatTriDelaunay(listIndiceList list, int nbProcess){
+matriceTriangle calcmatTriDelaunay(int nbProcess, maillage allTriangles){
   // calcul la matrice d'adgacence
-    maillage allTriangles = getTriangulation(list,nbProcess);
+    //maillage allTriangles = getTriangulation(list,nbProcess);
     listPoint2D pts = getPointMaillage(allTriangles);
     matriceTriangle newMatTri = constructeurMatriceTriangle(getTailleList2D(pts));
     // listIndiceList test = constructeurListIndiceList(pts);

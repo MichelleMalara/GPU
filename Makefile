@@ -11,7 +11,7 @@ COMMON_DIR=./
 # Compile all executable
 all: testGPU.o
 
-testGPU.o: testGPU.c listIndiceList.c listIndice.c listPoint.c point.c
+testGPU.o: testGPU.c hedge.c maillage.c matriceTriangle.c listIndiceList.c listIndice.c listPoint.c point.c
 	$(CC) $^ $(CCFLAGS) $(OMP_FLAGS) $(LIBS) -I $(COMMON_DIR) -o $@
 
 #pi: pi.c

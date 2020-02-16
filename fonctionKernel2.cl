@@ -217,14 +217,14 @@ __kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths
                 for(int l=0; l<n; l++){
                     d = groupPath[id*taillePoint[0]+l];
                     if(d != a && d != b && d != c){
-                         distance = distanceBisFloat(listPoint[b], xCentre, yCentre);
+                         distance = distanceBisFloat(listPoint[d], xCentre, yCentre);
                          if(distance < rayon){
                              flag = 0;
                          }
                     }
                 }
                 if(flag){
-                    if(compteur < 2*taillePoint[0]-1){
+                    if(compteur < 2*taillePoint[0]-2){
                         maillage[id*6*taillePoint[0]+3*compteur]=a;
                         maillage[id*6*taillePoint[0]+3*compteur+1]=b;
                         maillage[id*6*taillePoint[0]+3*compteur+2]=c;

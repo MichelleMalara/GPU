@@ -78,13 +78,13 @@ void addHedgeByPoints(hedge *H, Point2D p1, Point2D p2){
 
 // ------ fonction triangulation ------ //
 
-hedge calcHedgeDelaunay(listIndiceList list, int nbProcess){
+hedge calcHedgeDelaunay(listPoint2D list, int nbProcess, matriceTriangle matAdj){
 // calcul de le arrets du maillage en combinant les triangles et les convexHull
 // retourner une liste de listes de 2 points
   hedge newHedge = constructeurHedge(0);
-  matriceTriangle matAdj = calcmatTriDelaunay(list, nbProcess);
+  //matriceTriangle matAdj = calcmatTriDelaunay(list, nbProcess);
   //displayMatriceTriangle(matAdj);
-  listPoint2D pts = getPoints(list);
+  listPoint2D pts = list;
 
   listIndice ligne;
   for(int i=0 ; i<getTailleMatrice(matAdj) ; i++){ //chaque ligne
@@ -179,7 +179,7 @@ void addPathEdge(hedge *edge, listIndice list, listPoint2D listPoint){
     }
 }
 
-hedge getPath(listPoint2D listPoint, int nbProcess){
+/*hedge getPath(listPoint2D listPoint, int nbProcess){
 
     //displayListPoint2D(listPoint);
 
@@ -190,9 +190,6 @@ hedge getPath(listPoint2D listPoint, int nbProcess){
     newListIndiceList.indiceList = (listIndice*) malloc(nbProcess*sizeof(listIndice));
     triByX(&copyList);
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
-    /*printf("\n");
-    displayListIndice(pointForPath);
-    printf("\n");*/
     listIndiceList path = constructeurListIndiceListTaille(nbProcess-1, copyList);
 #pragma omp parallel
     {
@@ -210,4 +207,4 @@ hedge getPath(listPoint2D listPoint, int nbProcess){
     //displayHedge(paths);
     return paths;
 
-}
+}*/
