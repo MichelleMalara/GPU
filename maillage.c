@@ -46,7 +46,6 @@ maillage constructMaillageFromCL(int *maillage2, int *maillageTaille, int nbPrc,
             c = maillage2[6*i*getTailleList2D(listPoint)+3*j+2];
             triangle = constructeurTriangle(a,b,c);
             addListIndiceList(&res,triangle);
-            printf("Ajout triangle");
         }
         setMaillage(&newList, res, i);
     }

@@ -181,6 +181,8 @@ __kernel void getGroup(__global Point2D *listPoint, __global int *paths,__global
         }
         groupPathTaille[id]=compteur;
     }
+    //setListIndice(&newListIndiceList, group, id);
+    
 }
 
 
@@ -220,11 +222,83 @@ __kernel void getMaillageKernel(__global Point2D *listPoint, __global int *paths
                     }
                 }
                 if(flag==1){
-                    if(compteur < (2*taillePoint[0]-2)){
-                        maillage2[id*6*taillePoint[0]+3*compteur]=a;
-                        maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
-                        maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
-                        compteur++;
+                    int flag = 1;
+                    if(nbPrc[0]==1){
+                        if(compteur < (2*taillePoint[0]-2)){
+                            maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                            maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                            maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
+                            compteur++;
+                        }
+                    }
+                    if(nbPrc[0]==2){
+                        int e = paths[0];
+                        if(e == a || e == b || e == c){
+                            e = paths[taillePath[0]-1];
+                            if(e == a || e == b || e == c){
+                                flag2=0;
+                            }
+                        }
+                        if(flag && compteur < (2*taillePoint[0]-2)){
+                            maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                            maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                            maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
+                            compteur++;
+                        }
+                    }
+                    if(nbPrc[0]>3){
+                        if(id==0){
+                            int e = paths[0];
+                            if(e == a || e == b || e == c){
+                                e = paths[taillePath[0]-1];
+                                if(e == a || e == b || e == c){
+                                    flag2=0;
+                                }
+                            }
+                            if(flag && compteur < (2*taillePoint[0]-2)){
+                                maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                                maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                                maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
+                                compteur++;
+                            }
+                        }
+                        if(id==nbPrc[0]-1){
+                            int e = paths[(id-1)*taillePoint[0]];
+                            if(e == a || e == b || e == c){
+                                e = paths[(id-1)*taillePoint[0]+taillePath[0]-1];
+                                if(e == a || e == b || e == c){
+                                    flag2=0;
+                                }
+                            }
+                            if(flag && compteur < (2*taillePoint[0]-2)){
+                                maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                                maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                                maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
+                                compteur++;
+                            }
+                        }
+                        if(id != 0 && id != nbPrc[0]-1){
+                            int e = paths[id*taillePoint[0]];
+                            if(e == a || e == b || e == c){
+                                e = paths[id*taillePoint[0]+taillePath[0]-1];
+                                if(e == a || e == b || e == c){
+                                    flag2=0;
+                                }
+                            }
+                            e = paths[(id-1)*taillePoint[0]];
+                            if(e == a || e == b || e == c){
+                                e = paths[(id-1)*taillePoint[0]+taillePath[0]-1];
+                                if(e == a || e == b || e == c){
+                                    flag2=0;
+                                }
+                            }
+                            if(flag && compteur < (2*taillePoint[0]-2)){
+                                maillage2[id*6*taillePoint[0]+3*compteur]=a;
+                                maillage2[id*6*taillePoint[0]+3*compteur+1]=b;
+                                maillage2[id*6*taillePoint[0]+3*compteur+2]=c;
+                                compteur++;
+                            }
+                        }
                     }
                 }
             }

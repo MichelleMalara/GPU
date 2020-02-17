@@ -10,10 +10,6 @@
 #include <math.h>
 #include <time.h>
 
-#define QTE_DONNEES 20
-
-
-
 SDL_Point* getSDLPoint(listPoint2D listPoint, float xmin, float ymin, float xmax, float ymax){
     int listTaille = getTailleList2D(listPoint);
     SDL_Point* list = (SDL_Point*) malloc(listTaille*sizeof(SDL_Point));
@@ -34,6 +30,7 @@ void displayListPointInterface(SDL_Renderer* ren, listPoint2D listPoint, float x
     SDL_RenderPresent(ren);
 
 }
+
 
 void displayHedgeInterface(SDL_Renderer* ren, hedge edge, float xmin, float ymin, float xmax, float ymax){
     SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
@@ -127,7 +124,6 @@ int affichageMailleSDL(listPoint2D list, hedge maille)
 }
 
 
-
 char* read_file(char* fileName){
 
     FILE* fichier = NULL;
@@ -198,14 +194,13 @@ int main (int argc, const char * argv[])
     cl_mem taillePath_buffer;
     // Initialisation des variables de données
 
-    int nbProcess = 4;
+    int nbProcess = 5;
 
-    listPoint2D list = constructListPoint2DFromFile("test2");
+    listPoint2D list = constructListPoint2DFromFile("test3");
     listPoint2D copyList = constructListPoint2DFromListPoint(list);
-    int tailleCopyList = getTailleList2D(copyList); 
     triByX(&copyList);
+    int tailleCopyList = getTailleList2D(copyList); 
     listIndice pointForPath = findPointsPathIndice(copyList, nbProcess);
-    displayListIndice(pointForPath);
     int *paths = malloc(sizeof(int)*tailleCopyList*(nbProcess-1));
     for(int i=0; i<tailleCopyList*(nbProcess-1); i++){
         paths[i]=-1;
@@ -399,7 +394,7 @@ int main (int argc, const char * argv[])
     codeErreur = clSetKernelArg(noyau, 8, sizeof(maillageTaille_buffer), &maillageTaille_buffer);
 
     // Mettre le noyau dans la file d'execution
-    size_t dimensions_globales3[] = { QTE_DONNEES, 0, 0 };
+    size_t dimensions_globales3[] = { nbProcess, 0, 0 };
     codeErreur = clEnqueueNDRangeKernel(file_execution, noyau, 1, NULL, 
             dimensions_globales3, NULL, 0, NULL, NULL);
 
@@ -434,7 +429,6 @@ int main (int argc, const char * argv[])
 
 
     // Affichage des résultats
-    displayHedge(resultat);
     int init = affichageMailleSDL(copyList, resultat);
 
 
